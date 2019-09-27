@@ -1,9 +1,10 @@
 package edu.usfca.cs.dfs.net;
 
-import edu.usfca.cs.dfs.StorageMessages;
-
+import edu.usfca.cs.dfs.messages.Messages;
+import edu.usfca.cs.dfs.controller.net.ControllerInboundHandler;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
+import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
@@ -12,10 +13,10 @@ import io.netty.handler.codec.protobuf.ProtobufEncoder;
 
 public class MessagePipeline extends ChannelInitializer<SocketChannel> {
 
-    private InboundHandler inboundHandler;
+    private SimpleChannelInboundHandler inboundHandler;
 
-    public MessagePipeline() {
-        inboundHandler = new InboundHandler();
+    public MessagePipeline(SimpleChannelInboundHandler inboundHandler) {
+        this.inboundHandler = inboundHandler;
     }
 
     @Override
@@ -32,8 +33,7 @@ public class MessagePipeline extends ChannelInitializer<SocketChannel> {
         pipeline.addLast(
                 new LengthFieldBasedFrameDecoder(1048576, 0, 4, 0, 4));
         pipeline.addLast(
-                new ProtobufDecoder(
-                    StorageMessages.StorageMessageWrapper.getDefaultInstance()));
+                new ProtobufDecoder(Messages.ProtoMessage.getDefaultInstance()));
         pipeline.addLast(inboundHandler);
 
         /* Outbound: */

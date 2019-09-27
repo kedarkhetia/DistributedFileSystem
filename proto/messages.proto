@@ -1,0 +1,21 @@
+syntax = "proto3";
+option java_package = "edu.usfca.cs.dfs.messages";
+
+
+// Storage related messages
+message ProtoMessage {
+    oneof msg {
+        Controller controller = 1;
+        Storage storage = 2;
+    }
+}
+
+message Controller {
+    string controllerMessage = 1;
+}
+
+message Storage {
+    string storageMessage = 1;
+}
+
+

@@ -8,6 +8,7 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
+import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
 
@@ -20,11 +21,11 @@ public class ServerMessageRouter {
 
     private Map<Integer, ChannelFuture> ports = new HashMap<>();
 
-    public ServerMessageRouter() {
+    public ServerMessageRouter(SimpleChannelInboundHandler inboundHandler) {
         bossGroup = new NioEventLoopGroup();
         workerGroup = new NioEventLoopGroup(4);
 
-        pipeline = new MessagePipeline();
+        pipeline = new MessagePipeline(inboundHandler);
 
         bootstrap = new ServerBootstrap()
             .group(bossGroup, workerGroup)
@@ -36,7 +37,7 @@ public class ServerMessageRouter {
 
     public ServerMessageRouter(int readBufferSize, int maxWriteQueueSize) {
         /* Ignoring parameters ... */
-        this();
+        this(null);
     }
 
     /**
