@@ -1,25 +1,21 @@
-package edu.usfca.cs.dfs.storage.client;
+package edu.usfca.cs.dfs.clients;
 
-import edu.usfca.cs.dfs.controller.net.ControllerInboundHandler;
 import edu.usfca.cs.dfs.messages.Messages;
 import edu.usfca.cs.dfs.net.MessagePipeline;
+import edu.usfca.cs.dfs.utils.Constants;
 import io.netty.bootstrap.Bootstrap;
-import io.netty.channel.Channel;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelOption;
-import io.netty.channel.EventLoopGroup;
+import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 
-public class ContorllerClient {
+public class Client {
 
     private Channel channel;
     private EventLoopGroup workerGroup;
 
-    public ContorllerClient(String hostname, int port) {
-        ControllerInboundHandler controllerInboundHandler = new ControllerInboundHandler();
+    public Client(String hostname, int port) {
         this.workerGroup = new NioEventLoopGroup();
-        MessagePipeline pipeline = new MessagePipeline(controllerInboundHandler);
+        MessagePipeline pipeline = new MessagePipeline();
 
         Bootstrap bootstrap = new Bootstrap()
                 .group(workerGroup)

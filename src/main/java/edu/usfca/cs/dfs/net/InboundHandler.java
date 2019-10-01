@@ -1,16 +1,17 @@
 package edu.usfca.cs.dfs.net;
 
+import java.io.IOException;
 import java.net.InetSocketAddress;
 
-import edu.usfca.cs.dfs.StorageMessages;
-
+import edu.usfca.cs.dfs.exceptions.InvalidMessageException;
+import edu.usfca.cs.dfs.messages.Messages;
 import io.netty.channel.ChannelHandler;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 
 @ChannelHandler.Sharable
 public class InboundHandler
-extends SimpleChannelInboundHandler<StorageMessages.StorageMessageWrapper> {
+extends SimpleChannelInboundHandler<Messages.ProtoMessage> {
 
     public InboundHandler() { }
 
@@ -39,12 +40,25 @@ extends SimpleChannelInboundHandler<StorageMessages.StorageMessageWrapper> {
     @Override
     public void channelRead0(
             ChannelHandlerContext ctx,
-            StorageMessages.StorageMessageWrapper msg) {
-
-        StorageMessages.StoreChunk storeChunkMsg
-            = msg.getStoreChunkMsg();
-        System.out.println("Storing file name: "
-                + storeChunkMsg.getFileName());
+            Messages.ProtoMessage msg) throws InvalidMessageException, IOException {
+        if(msg.hasController()) {
+            Messages.ProtoMessage resp = edu.usfca.cs.dfs.controller.MessageDispatcher.dispatch(msg.getController());
+            if(resp != null) {
+                ctx.writeAndFlush(resp);
+            }
+        }
+        else if(msg.hasStorage()) {
+            Messages.ProtoMessage resp = edu.usfca.cs.dfs.storage.MessageDispatcher.dispatch(msg.getStorage());
+            if(resp != null) {
+                ctx.writeAndFlush(resp);
+            }
+        }
+        else if(msg.hasClient()) {
+            Messages.ProtoMessage resp = edu.usfca.cs.dfs.dfsclient.MessageDispatcher.dispatch(msg.getClient());
+            if(resp != null) {
+                ctx.writeAndFlush(resp);
+            }
+        }
     }
 
     @Override
