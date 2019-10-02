@@ -44,6 +44,7 @@ message StoreChunk {
     string fileName = 1;
     int32 chunkId = 2;
     bytes data = 3;
+    repeated StorageNode storageLocations = 4;
 }
 
 // Client Messages

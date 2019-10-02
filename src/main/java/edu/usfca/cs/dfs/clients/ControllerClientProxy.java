@@ -1,6 +1,5 @@
-package edu.usfca.cs.dfs.dfsclient;
+package edu.usfca.cs.dfs.clients;
 
-import edu.usfca.cs.dfs.clients.Client;
 import edu.usfca.cs.dfs.messages.Messages;
 import edu.usfca.cs.dfs.utils.Constants;
 

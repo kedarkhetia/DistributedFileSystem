@@ -11,11 +11,11 @@ public class Constants {
     public static int STORAGE_PORT = 7778;
 
     // Number of Replicas
-    public static int REPLICAS = 1;
+    public static int REPLICAS = 3;
     
     // Thread Pools for Client
     public static int NUMBER_OF_THREADS = 3;
     
     // Number of ChunkSize
-    public static int CHUNK_SIZE = 104850;
+    public static int CHUNK_SIZE = 1048570;
 }
