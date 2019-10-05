@@ -18,6 +18,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import com.google.protobuf.ByteString;
 
@@ -36,6 +37,7 @@ public class DistributedFileSystem {
             int count = (int) Files.size(path) / chunkSize;
             int bufCount = 0;
             int i = 0;
+            ControllerClientProxy controllerClient = new ControllerClientProxy();
             for(i=0; i<count; i++) {
                 data = new byte[chunkSize];
                 bufCount = 0;
@@ -44,7 +46,7 @@ public class DistributedFileSystem {
                     bufCount++;
                 }
                 String chunkedFileName = filename + "_chunk" + i;
-                ControllerClientProxy.newControllerClientProxy().getStorageLocations(chunkedFileName);
+                controllerClient.getStorageLocations(chunkedFileName);
                 List<Messages.StorageNode> locations = getStorageNodes().get();
                 storeInStorage(chunkedFileName, i, ByteString.copyFrom(data), locations);
             }
@@ -56,9 +58,10 @@ public class DistributedFileSystem {
                 bufCount++;
             }
             String chunkedFileName = filename + "_chunk" + i;
-            ControllerClientProxy.newControllerClientProxy().getStorageLocations(chunkedFileName);
+            controllerClient.getStorageLocations(chunkedFileName);
             List<Messages.StorageNode> locations = getStorageNodes().get();
             storeInStorage(chunkedFileName, i, ByteString.copyFrom(Arrays.copyOf(data, bufCount)), locations);
+            controllerClient.disconnect();
         }
 		
     }
@@ -98,5 +101,12 @@ public class DistributedFileSystem {
 			}
         });
 	}
+    
+    public void close() throws InterruptedException {
+    	threadPool.shutdown();
+    	while (!threadPool.awaitTermination(24L, TimeUnit.HOURS)) {
+    	    System.out.println("Waiting! Awaiting Distributed File System Termination!");
+    	}
+    }
     
 }

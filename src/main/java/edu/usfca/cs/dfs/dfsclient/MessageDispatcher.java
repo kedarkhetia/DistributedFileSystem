@@ -10,7 +10,7 @@ import edu.usfca.cs.dfs.messages.Messages.StorageNode;
 
 public class MessageDispatcher {
 	
-	public static volatile List<StorageNode> locations = new LinkedList<>();
+	public static volatile List<Messages.StorageNode> locations = new LinkedList<>();
 
     public static Messages.ProtoMessage dispatch(Messages.Client message) throws InvalidMessageException {
         if(message.hasStorageLocationResponse()) {
@@ -21,4 +21,5 @@ public class MessageDispatcher {
         }
         return null;
     }
+    
 }

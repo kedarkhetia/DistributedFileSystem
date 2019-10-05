@@ -4,17 +4,9 @@ import edu.usfca.cs.dfs.messages.Messages;
 import edu.usfca.cs.dfs.utils.Constants;
 
 public class ControllerClientProxy {
-    private static ControllerClientProxy controllerClientProxy;
     private Client client;
 
-    public static ControllerClientProxy newControllerClientProxy() {
-        if(controllerClientProxy == null) {
-            controllerClientProxy = new ControllerClientProxy();
-        }
-        return controllerClientProxy;
-    }
-
-    private ControllerClientProxy() {
+    public ControllerClientProxy() {
         this.client = new Client(Constants.CONTROLLER_HOSTNAME, Constants.CONTROLLER_PORT);
     }
 

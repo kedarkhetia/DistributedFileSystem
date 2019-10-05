@@ -1189,6 +1189,19 @@ public final class Messages {
      */
     edu.usfca.cs.dfs.messages.Messages.StorageLocationRequestOrBuilder getStorageLocationRequestOrBuilder();
 
+    /**
+     * <code>.StorageSpace StorageSpace = 3;</code>
+     */
+    boolean hasStorageSpace();
+    /**
+     * <code>.StorageSpace StorageSpace = 3;</code>
+     */
+    edu.usfca.cs.dfs.messages.Messages.StorageSpace getStorageSpace();
+    /**
+     * <code>.StorageSpace StorageSpace = 3;</code>
+     */
+    edu.usfca.cs.dfs.messages.Messages.StorageSpaceOrBuilder getStorageSpaceOrBuilder();
+
     public edu.usfca.cs.dfs.messages.Messages.Controller.MsgCase getMsgCase();
   }
   /**
@@ -1268,6 +1281,20 @@ public final class Messages {
               msgCase_ = 2;
               break;
             }
+            case 26: {
+              edu.usfca.cs.dfs.messages.Messages.StorageSpace.Builder subBuilder = null;
+              if (msgCase_ == 3) {
+                subBuilder = ((edu.usfca.cs.dfs.messages.Messages.StorageSpace) msg_).toBuilder();
+              }
+              msg_ =
+                  input.readMessage(edu.usfca.cs.dfs.messages.Messages.StorageSpace.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom((edu.usfca.cs.dfs.messages.Messages.StorageSpace) msg_);
+                msg_ = subBuilder.buildPartial();
+              }
+              msgCase_ = 3;
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
@@ -1306,6 +1333,7 @@ public final class Messages {
         implements com.google.protobuf.Internal.EnumLite {
       STORAGENODE(1),
       STORAGELOCATIONREQUEST(2),
+      STORAGESPACE(3),
       MSG_NOT_SET(0);
       private final int value;
       private MsgCase(int value) {
@@ -1323,6 +1351,7 @@ public final class Messages {
         switch (value) {
           case 1: return STORAGENODE;
           case 2: return STORAGELOCATIONREQUEST;
+          case 3: return STORAGESPACE;
           case 0: return MSG_NOT_SET;
           default: return null;
         }
@@ -1390,6 +1419,32 @@ public final class Messages {
       return edu.usfca.cs.dfs.messages.Messages.StorageLocationRequest.getDefaultInstance();
     }
 
+    public static final int STORAGESPACE_FIELD_NUMBER = 3;
+    /**
+     * <code>.StorageSpace StorageSpace = 3;</code>
+     */
+    public boolean hasStorageSpace() {
+      return msgCase_ == 3;
+    }
+    /**
+     * <code>.StorageSpace StorageSpace = 3;</code>
+     */
+    public edu.usfca.cs.dfs.messages.Messages.StorageSpace getStorageSpace() {
+      if (msgCase_ == 3) {
+         return (edu.usfca.cs.dfs.messages.Messages.StorageSpace) msg_;
+      }
+      return edu.usfca.cs.dfs.messages.Messages.StorageSpace.getDefaultInstance();
+    }
+    /**
+     * <code>.StorageSpace StorageSpace = 3;</code>
+     */
+    public edu.usfca.cs.dfs.messages.Messages.StorageSpaceOrBuilder getStorageSpaceOrBuilder() {
+      if (msgCase_ == 3) {
+         return (edu.usfca.cs.dfs.messages.Messages.StorageSpace) msg_;
+      }
+      return edu.usfca.cs.dfs.messages.Messages.StorageSpace.getDefaultInstance();
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -1410,6 +1465,9 @@ public final class Messages {
       if (msgCase_ == 2) {
         output.writeMessage(2, (edu.usfca.cs.dfs.messages.Messages.StorageLocationRequest) msg_);
       }
+      if (msgCase_ == 3) {
+        output.writeMessage(3, (edu.usfca.cs.dfs.messages.Messages.StorageSpace) msg_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -1426,6 +1484,10 @@ public final class Messages {
       if (msgCase_ == 2) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, (edu.usfca.cs.dfs.messages.Messages.StorageLocationRequest) msg_);
+      }
+      if (msgCase_ == 3) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, (edu.usfca.cs.dfs.messages.Messages.StorageSpace) msg_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -1452,6 +1514,10 @@ public final class Messages {
           if (!getStorageLocationRequest()
               .equals(other.getStorageLocationRequest())) return false;
           break;
+        case 3:
+          if (!getStorageSpace()
+              .equals(other.getStorageSpace())) return false;
+          break;
         case 0:
         default:
       }
@@ -1474,6 +1540,10 @@ public final class Messages {
         case 2:
           hash = (37 * hash) + STORAGELOCATIONREQUEST_FIELD_NUMBER;
           hash = (53 * hash) + getStorageLocationRequest().hashCode();
+          break;
+        case 3:
+          hash = (37 * hash) + STORAGESPACE_FIELD_NUMBER;
+          hash = (53 * hash) + getStorageSpace().hashCode();
           break;
         case 0:
         default:
@@ -1657,6 +1727,13 @@ public final class Messages {
             result.msg_ = storageLocationRequestBuilder_.build();
           }
         }
+        if (msgCase_ == 3) {
+          if (storageSpaceBuilder_ == null) {
+            result.msg_ = msg_;
+          } else {
+            result.msg_ = storageSpaceBuilder_.build();
+          }
+        }
         result.msgCase_ = msgCase_;
         onBuilt();
         return result;
@@ -1713,6 +1790,10 @@ public final class Messages {
           }
           case STORAGELOCATIONREQUEST: {
             mergeStorageLocationRequest(other.getStorageLocationRequest());
+            break;
+          }
+          case STORAGESPACE: {
+            mergeStorageSpace(other.getStorageSpace());
             break;
           }
           case MSG_NOT_SET: {
@@ -2033,6 +2114,142 @@ public final class Messages {
         msgCase_ = 2;
         onChanged();;
         return storageLocationRequestBuilder_;
+      }
+
+      private com.google.protobuf.SingleFieldBuilderV3<
+          edu.usfca.cs.dfs.messages.Messages.StorageSpace, edu.usfca.cs.dfs.messages.Messages.StorageSpace.Builder, edu.usfca.cs.dfs.messages.Messages.StorageSpaceOrBuilder> storageSpaceBuilder_;
+      /**
+       * <code>.StorageSpace StorageSpace = 3;</code>
+       */
+      public boolean hasStorageSpace() {
+        return msgCase_ == 3;
+      }
+      /**
+       * <code>.StorageSpace StorageSpace = 3;</code>
+       */
+      public edu.usfca.cs.dfs.messages.Messages.StorageSpace getStorageSpace() {
+        if (storageSpaceBuilder_ == null) {
+          if (msgCase_ == 3) {
+            return (edu.usfca.cs.dfs.messages.Messages.StorageSpace) msg_;
+          }
+          return edu.usfca.cs.dfs.messages.Messages.StorageSpace.getDefaultInstance();
+        } else {
+          if (msgCase_ == 3) {
+            return storageSpaceBuilder_.getMessage();
+          }
+          return edu.usfca.cs.dfs.messages.Messages.StorageSpace.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.StorageSpace StorageSpace = 3;</code>
+       */
+      public Builder setStorageSpace(edu.usfca.cs.dfs.messages.Messages.StorageSpace value) {
+        if (storageSpaceBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          msg_ = value;
+          onChanged();
+        } else {
+          storageSpaceBuilder_.setMessage(value);
+        }
+        msgCase_ = 3;
+        return this;
+      }
+      /**
+       * <code>.StorageSpace StorageSpace = 3;</code>
+       */
+      public Builder setStorageSpace(
+          edu.usfca.cs.dfs.messages.Messages.StorageSpace.Builder builderForValue) {
+        if (storageSpaceBuilder_ == null) {
+          msg_ = builderForValue.build();
+          onChanged();
+        } else {
+          storageSpaceBuilder_.setMessage(builderForValue.build());
+        }
+        msgCase_ = 3;
+        return this;
+      }
+      /**
+       * <code>.StorageSpace StorageSpace = 3;</code>
+       */
+      public Builder mergeStorageSpace(edu.usfca.cs.dfs.messages.Messages.StorageSpace value) {
+        if (storageSpaceBuilder_ == null) {
+          if (msgCase_ == 3 &&
+              msg_ != edu.usfca.cs.dfs.messages.Messages.StorageSpace.getDefaultInstance()) {
+            msg_ = edu.usfca.cs.dfs.messages.Messages.StorageSpace.newBuilder((edu.usfca.cs.dfs.messages.Messages.StorageSpace) msg_)
+                .mergeFrom(value).buildPartial();
+          } else {
+            msg_ = value;
+          }
+          onChanged();
+        } else {
+          if (msgCase_ == 3) {
+            storageSpaceBuilder_.mergeFrom(value);
+          }
+          storageSpaceBuilder_.setMessage(value);
+        }
+        msgCase_ = 3;
+        return this;
+      }
+      /**
+       * <code>.StorageSpace StorageSpace = 3;</code>
+       */
+      public Builder clearStorageSpace() {
+        if (storageSpaceBuilder_ == null) {
+          if (msgCase_ == 3) {
+            msgCase_ = 0;
+            msg_ = null;
+            onChanged();
+          }
+        } else {
+          if (msgCase_ == 3) {
+            msgCase_ = 0;
+            msg_ = null;
+          }
+          storageSpaceBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>.StorageSpace StorageSpace = 3;</code>
+       */
+      public edu.usfca.cs.dfs.messages.Messages.StorageSpace.Builder getStorageSpaceBuilder() {
+        return getStorageSpaceFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>.StorageSpace StorageSpace = 3;</code>
+       */
+      public edu.usfca.cs.dfs.messages.Messages.StorageSpaceOrBuilder getStorageSpaceOrBuilder() {
+        if ((msgCase_ == 3) && (storageSpaceBuilder_ != null)) {
+          return storageSpaceBuilder_.getMessageOrBuilder();
+        } else {
+          if (msgCase_ == 3) {
+            return (edu.usfca.cs.dfs.messages.Messages.StorageSpace) msg_;
+          }
+          return edu.usfca.cs.dfs.messages.Messages.StorageSpace.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.StorageSpace StorageSpace = 3;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          edu.usfca.cs.dfs.messages.Messages.StorageSpace, edu.usfca.cs.dfs.messages.Messages.StorageSpace.Builder, edu.usfca.cs.dfs.messages.Messages.StorageSpaceOrBuilder> 
+          getStorageSpaceFieldBuilder() {
+        if (storageSpaceBuilder_ == null) {
+          if (!(msgCase_ == 3)) {
+            msg_ = edu.usfca.cs.dfs.messages.Messages.StorageSpace.getDefaultInstance();
+          }
+          storageSpaceBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              edu.usfca.cs.dfs.messages.Messages.StorageSpace, edu.usfca.cs.dfs.messages.Messages.StorageSpace.Builder, edu.usfca.cs.dfs.messages.Messages.StorageSpaceOrBuilder>(
+                  (edu.usfca.cs.dfs.messages.Messages.StorageSpace) msg_,
+                  getParentForChildren(),
+                  isClean());
+          msg_ = null;
+        }
+        msgCase_ = 3;
+        onChanged();;
+        return storageSpaceBuilder_;
       }
       @java.lang.Override
       public final Builder setUnknownFields(
@@ -2717,6 +2934,11 @@ public final class Messages {
      */
     com.google.protobuf.ByteString
         getFilenameBytes();
+
+    /**
+     * <code>int64 size = 2;</code>
+     */
+    long getSize();
   }
   /**
    * Protobuf type {@code StorageLocationRequest}
@@ -2768,6 +2990,11 @@ public final class Messages {
               java.lang.String s = input.readStringRequireUtf8();
 
               filename_ = s;
+              break;
+            }
+            case 16: {
+
+              size_ = input.readInt64();
               break;
             }
             default: {
@@ -2836,6 +3063,15 @@ public final class Messages {
       }
     }
 
+    public static final int SIZE_FIELD_NUMBER = 2;
+    private long size_;
+    /**
+     * <code>int64 size = 2;</code>
+     */
+    public long getSize() {
+      return size_;
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -2853,6 +3089,9 @@ public final class Messages {
       if (!getFilenameBytes().isEmpty()) {
         com.google.protobuf.GeneratedMessageV3.writeString(output, 1, filename_);
       }
+      if (size_ != 0L) {
+        output.writeInt64(2, size_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -2864,6 +3103,10 @@ public final class Messages {
       size = 0;
       if (!getFilenameBytes().isEmpty()) {
         size += com.google.protobuf.GeneratedMessageV3.computeStringSize(1, filename_);
+      }
+      if (size_ != 0L) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(2, size_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -2882,6 +3125,8 @@ public final class Messages {
 
       if (!getFilename()
           .equals(other.getFilename())) return false;
+      if (getSize()
+          != other.getSize()) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
       return true;
     }
@@ -2895,6 +3140,9 @@ public final class Messages {
       hash = (19 * hash) + getDescriptor().hashCode();
       hash = (37 * hash) + FILENAME_FIELD_NUMBER;
       hash = (53 * hash) + getFilename().hashCode();
+      hash = (37 * hash) + SIZE_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getSize());
       hash = (29 * hash) + unknownFields.hashCode();
       memoizedHashCode = hash;
       return hash;
@@ -3030,6 +3278,8 @@ public final class Messages {
         super.clear();
         filename_ = "";
 
+        size_ = 0L;
+
         return this;
       }
 
@@ -3057,6 +3307,7 @@ public final class Messages {
       public edu.usfca.cs.dfs.messages.Messages.StorageLocationRequest buildPartial() {
         edu.usfca.cs.dfs.messages.Messages.StorageLocationRequest result = new edu.usfca.cs.dfs.messages.Messages.StorageLocationRequest(this);
         result.filename_ = filename_;
+        result.size_ = size_;
         onBuilt();
         return result;
       }
@@ -3108,6 +3359,9 @@ public final class Messages {
         if (!other.getFilename().isEmpty()) {
           filename_ = other.filename_;
           onChanged();
+        }
+        if (other.getSize() != 0L) {
+          setSize(other.getSize());
         }
         this.mergeUnknownFields(other.unknownFields);
         onChanged();
@@ -3206,6 +3460,32 @@ public final class Messages {
         onChanged();
         return this;
       }
+
+      private long size_ ;
+      /**
+       * <code>int64 size = 2;</code>
+       */
+      public long getSize() {
+        return size_;
+      }
+      /**
+       * <code>int64 size = 2;</code>
+       */
+      public Builder setSize(long value) {
+        
+        size_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>int64 size = 2;</code>
+       */
+      public Builder clearSize() {
+        
+        size_ = 0L;
+        onChanged();
+        return this;
+      }
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -3259,6 +3539,487 @@ public final class Messages {
 
   }
 
+  public interface StorageSpaceOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:StorageSpace)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>int64 availableSpace = 1;</code>
+     */
+    long getAvailableSpace();
+  }
+  /**
+   * Protobuf type {@code StorageSpace}
+   */
+  public  static final class StorageSpace extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:StorageSpace)
+      StorageSpaceOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use StorageSpace.newBuilder() to construct.
+    private StorageSpace(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private StorageSpace() {
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new StorageSpace();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private StorageSpace(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 8: {
+
+              availableSpace_ = input.readInt64();
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return edu.usfca.cs.dfs.messages.Messages.internal_static_StorageSpace_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return edu.usfca.cs.dfs.messages.Messages.internal_static_StorageSpace_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              edu.usfca.cs.dfs.messages.Messages.StorageSpace.class, edu.usfca.cs.dfs.messages.Messages.StorageSpace.Builder.class);
+    }
+
+    public static final int AVAILABLESPACE_FIELD_NUMBER = 1;
+    private long availableSpace_;
+    /**
+     * <code>int64 availableSpace = 1;</code>
+     */
+    public long getAvailableSpace() {
+      return availableSpace_;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (availableSpace_ != 0L) {
+        output.writeInt64(1, availableSpace_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (availableSpace_ != 0L) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt64Size(1, availableSpace_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof edu.usfca.cs.dfs.messages.Messages.StorageSpace)) {
+        return super.equals(obj);
+      }
+      edu.usfca.cs.dfs.messages.Messages.StorageSpace other = (edu.usfca.cs.dfs.messages.Messages.StorageSpace) obj;
+
+      if (getAvailableSpace()
+          != other.getAvailableSpace()) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + AVAILABLESPACE_FIELD_NUMBER;
+      hash = (53 * hash) + com.google.protobuf.Internal.hashLong(
+          getAvailableSpace());
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static edu.usfca.cs.dfs.messages.Messages.StorageSpace parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static edu.usfca.cs.dfs.messages.Messages.StorageSpace parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static edu.usfca.cs.dfs.messages.Messages.StorageSpace parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static edu.usfca.cs.dfs.messages.Messages.StorageSpace parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static edu.usfca.cs.dfs.messages.Messages.StorageSpace parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static edu.usfca.cs.dfs.messages.Messages.StorageSpace parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static edu.usfca.cs.dfs.messages.Messages.StorageSpace parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static edu.usfca.cs.dfs.messages.Messages.StorageSpace parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static edu.usfca.cs.dfs.messages.Messages.StorageSpace parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static edu.usfca.cs.dfs.messages.Messages.StorageSpace parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static edu.usfca.cs.dfs.messages.Messages.StorageSpace parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static edu.usfca.cs.dfs.messages.Messages.StorageSpace parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(edu.usfca.cs.dfs.messages.Messages.StorageSpace prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code StorageSpace}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:StorageSpace)
+        edu.usfca.cs.dfs.messages.Messages.StorageSpaceOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return edu.usfca.cs.dfs.messages.Messages.internal_static_StorageSpace_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return edu.usfca.cs.dfs.messages.Messages.internal_static_StorageSpace_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                edu.usfca.cs.dfs.messages.Messages.StorageSpace.class, edu.usfca.cs.dfs.messages.Messages.StorageSpace.Builder.class);
+      }
+
+      // Construct using edu.usfca.cs.dfs.messages.Messages.StorageSpace.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        availableSpace_ = 0L;
+
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return edu.usfca.cs.dfs.messages.Messages.internal_static_StorageSpace_descriptor;
+      }
+
+      @java.lang.Override
+      public edu.usfca.cs.dfs.messages.Messages.StorageSpace getDefaultInstanceForType() {
+        return edu.usfca.cs.dfs.messages.Messages.StorageSpace.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public edu.usfca.cs.dfs.messages.Messages.StorageSpace build() {
+        edu.usfca.cs.dfs.messages.Messages.StorageSpace result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public edu.usfca.cs.dfs.messages.Messages.StorageSpace buildPartial() {
+        edu.usfca.cs.dfs.messages.Messages.StorageSpace result = new edu.usfca.cs.dfs.messages.Messages.StorageSpace(this);
+        result.availableSpace_ = availableSpace_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof edu.usfca.cs.dfs.messages.Messages.StorageSpace) {
+          return mergeFrom((edu.usfca.cs.dfs.messages.Messages.StorageSpace)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(edu.usfca.cs.dfs.messages.Messages.StorageSpace other) {
+        if (other == edu.usfca.cs.dfs.messages.Messages.StorageSpace.getDefaultInstance()) return this;
+        if (other.getAvailableSpace() != 0L) {
+          setAvailableSpace(other.getAvailableSpace());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        edu.usfca.cs.dfs.messages.Messages.StorageSpace parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (edu.usfca.cs.dfs.messages.Messages.StorageSpace) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+
+      private long availableSpace_ ;
+      /**
+       * <code>int64 availableSpace = 1;</code>
+       */
+      public long getAvailableSpace() {
+        return availableSpace_;
+      }
+      /**
+       * <code>int64 availableSpace = 1;</code>
+       */
+      public Builder setAvailableSpace(long value) {
+        
+        availableSpace_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>int64 availableSpace = 1;</code>
+       */
+      public Builder clearAvailableSpace() {
+        
+        availableSpace_ = 0L;
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:StorageSpace)
+    }
+
+    // @@protoc_insertion_point(class_scope:StorageSpace)
+    private static final edu.usfca.cs.dfs.messages.Messages.StorageSpace DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new edu.usfca.cs.dfs.messages.Messages.StorageSpace();
+    }
+
+    public static edu.usfca.cs.dfs.messages.Messages.StorageSpace getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<StorageSpace>
+        PARSER = new com.google.protobuf.AbstractParser<StorageSpace>() {
+      @java.lang.Override
+      public StorageSpace parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new StorageSpace(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<StorageSpace> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<StorageSpace> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public edu.usfca.cs.dfs.messages.Messages.StorageSpace getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
   public interface StorageOrBuilder extends
       // @@protoc_insertion_point(interface_extends:Storage)
       com.google.protobuf.MessageOrBuilder {
@@ -3288,6 +4049,19 @@ public final class Messages {
      * <code>.StorageNodeResponse storeNodeResponse = 2;</code>
      */
     edu.usfca.cs.dfs.messages.Messages.StorageNodeResponseOrBuilder getStoreNodeResponseOrBuilder();
+
+    /**
+     * <code>.StorageEmptyMessage messageType = 3;</code>
+     */
+    boolean hasMessageType();
+    /**
+     * <code>.StorageEmptyMessage messageType = 3;</code>
+     */
+    edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage getMessageType();
+    /**
+     * <code>.StorageEmptyMessage messageType = 3;</code>
+     */
+    edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessageOrBuilder getMessageTypeOrBuilder();
 
     public edu.usfca.cs.dfs.messages.Messages.Storage.MsgCase getMsgCase();
   }
@@ -3368,6 +4142,20 @@ public final class Messages {
               msgCase_ = 2;
               break;
             }
+            case 26: {
+              edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.Builder subBuilder = null;
+              if (msgCase_ == 3) {
+                subBuilder = ((edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage) msg_).toBuilder();
+              }
+              msg_ =
+                  input.readMessage(edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.parser(), extensionRegistry);
+              if (subBuilder != null) {
+                subBuilder.mergeFrom((edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage) msg_);
+                msg_ = subBuilder.buildPartial();
+              }
+              msgCase_ = 3;
+              break;
+            }
             default: {
               if (!parseUnknownField(
                   input, unknownFields, extensionRegistry, tag)) {
@@ -3406,6 +4194,7 @@ public final class Messages {
         implements com.google.protobuf.Internal.EnumLite {
       STORECHUNK(1),
       STORENODERESPONSE(2),
+      MESSAGETYPE(3),
       MSG_NOT_SET(0);
       private final int value;
       private MsgCase(int value) {
@@ -3423,6 +4212,7 @@ public final class Messages {
         switch (value) {
           case 1: return STORECHUNK;
           case 2: return STORENODERESPONSE;
+          case 3: return MESSAGETYPE;
           case 0: return MSG_NOT_SET;
           default: return null;
         }
@@ -3490,6 +4280,32 @@ public final class Messages {
       return edu.usfca.cs.dfs.messages.Messages.StorageNodeResponse.getDefaultInstance();
     }
 
+    public static final int MESSAGETYPE_FIELD_NUMBER = 3;
+    /**
+     * <code>.StorageEmptyMessage messageType = 3;</code>
+     */
+    public boolean hasMessageType() {
+      return msgCase_ == 3;
+    }
+    /**
+     * <code>.StorageEmptyMessage messageType = 3;</code>
+     */
+    public edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage getMessageType() {
+      if (msgCase_ == 3) {
+         return (edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage) msg_;
+      }
+      return edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.getDefaultInstance();
+    }
+    /**
+     * <code>.StorageEmptyMessage messageType = 3;</code>
+     */
+    public edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessageOrBuilder getMessageTypeOrBuilder() {
+      if (msgCase_ == 3) {
+         return (edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage) msg_;
+      }
+      return edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.getDefaultInstance();
+    }
+
     private byte memoizedIsInitialized = -1;
     @java.lang.Override
     public final boolean isInitialized() {
@@ -3510,6 +4326,9 @@ public final class Messages {
       if (msgCase_ == 2) {
         output.writeMessage(2, (edu.usfca.cs.dfs.messages.Messages.StorageNodeResponse) msg_);
       }
+      if (msgCase_ == 3) {
+        output.writeMessage(3, (edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage) msg_);
+      }
       unknownFields.writeTo(output);
     }
 
@@ -3526,6 +4345,10 @@ public final class Messages {
       if (msgCase_ == 2) {
         size += com.google.protobuf.CodedOutputStream
           .computeMessageSize(2, (edu.usfca.cs.dfs.messages.Messages.StorageNodeResponse) msg_);
+      }
+      if (msgCase_ == 3) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeMessageSize(3, (edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage) msg_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -3552,6 +4375,10 @@ public final class Messages {
           if (!getStoreNodeResponse()
               .equals(other.getStoreNodeResponse())) return false;
           break;
+        case 3:
+          if (!getMessageType()
+              .equals(other.getMessageType())) return false;
+          break;
         case 0:
         default:
       }
@@ -3574,6 +4401,10 @@ public final class Messages {
         case 2:
           hash = (37 * hash) + STORENODERESPONSE_FIELD_NUMBER;
           hash = (53 * hash) + getStoreNodeResponse().hashCode();
+          break;
+        case 3:
+          hash = (37 * hash) + MESSAGETYPE_FIELD_NUMBER;
+          hash = (53 * hash) + getMessageType().hashCode();
           break;
         case 0:
         default:
@@ -3757,6 +4588,13 @@ public final class Messages {
             result.msg_ = storeNodeResponseBuilder_.build();
           }
         }
+        if (msgCase_ == 3) {
+          if (messageTypeBuilder_ == null) {
+            result.msg_ = msg_;
+          } else {
+            result.msg_ = messageTypeBuilder_.build();
+          }
+        }
         result.msgCase_ = msgCase_;
         onBuilt();
         return result;
@@ -3813,6 +4651,10 @@ public final class Messages {
           }
           case STORENODERESPONSE: {
             mergeStoreNodeResponse(other.getStoreNodeResponse());
+            break;
+          }
+          case MESSAGETYPE: {
+            mergeMessageType(other.getMessageType());
             break;
           }
           case MSG_NOT_SET: {
@@ -4134,6 +4976,142 @@ public final class Messages {
         onChanged();;
         return storeNodeResponseBuilder_;
       }
+
+      private com.google.protobuf.SingleFieldBuilderV3<
+          edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage, edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.Builder, edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessageOrBuilder> messageTypeBuilder_;
+      /**
+       * <code>.StorageEmptyMessage messageType = 3;</code>
+       */
+      public boolean hasMessageType() {
+        return msgCase_ == 3;
+      }
+      /**
+       * <code>.StorageEmptyMessage messageType = 3;</code>
+       */
+      public edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage getMessageType() {
+        if (messageTypeBuilder_ == null) {
+          if (msgCase_ == 3) {
+            return (edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage) msg_;
+          }
+          return edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.getDefaultInstance();
+        } else {
+          if (msgCase_ == 3) {
+            return messageTypeBuilder_.getMessage();
+          }
+          return edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.StorageEmptyMessage messageType = 3;</code>
+       */
+      public Builder setMessageType(edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage value) {
+        if (messageTypeBuilder_ == null) {
+          if (value == null) {
+            throw new NullPointerException();
+          }
+          msg_ = value;
+          onChanged();
+        } else {
+          messageTypeBuilder_.setMessage(value);
+        }
+        msgCase_ = 3;
+        return this;
+      }
+      /**
+       * <code>.StorageEmptyMessage messageType = 3;</code>
+       */
+      public Builder setMessageType(
+          edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.Builder builderForValue) {
+        if (messageTypeBuilder_ == null) {
+          msg_ = builderForValue.build();
+          onChanged();
+        } else {
+          messageTypeBuilder_.setMessage(builderForValue.build());
+        }
+        msgCase_ = 3;
+        return this;
+      }
+      /**
+       * <code>.StorageEmptyMessage messageType = 3;</code>
+       */
+      public Builder mergeMessageType(edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage value) {
+        if (messageTypeBuilder_ == null) {
+          if (msgCase_ == 3 &&
+              msg_ != edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.getDefaultInstance()) {
+            msg_ = edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.newBuilder((edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage) msg_)
+                .mergeFrom(value).buildPartial();
+          } else {
+            msg_ = value;
+          }
+          onChanged();
+        } else {
+          if (msgCase_ == 3) {
+            messageTypeBuilder_.mergeFrom(value);
+          }
+          messageTypeBuilder_.setMessage(value);
+        }
+        msgCase_ = 3;
+        return this;
+      }
+      /**
+       * <code>.StorageEmptyMessage messageType = 3;</code>
+       */
+      public Builder clearMessageType() {
+        if (messageTypeBuilder_ == null) {
+          if (msgCase_ == 3) {
+            msgCase_ = 0;
+            msg_ = null;
+            onChanged();
+          }
+        } else {
+          if (msgCase_ == 3) {
+            msgCase_ = 0;
+            msg_ = null;
+          }
+          messageTypeBuilder_.clear();
+        }
+        return this;
+      }
+      /**
+       * <code>.StorageEmptyMessage messageType = 3;</code>
+       */
+      public edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.Builder getMessageTypeBuilder() {
+        return getMessageTypeFieldBuilder().getBuilder();
+      }
+      /**
+       * <code>.StorageEmptyMessage messageType = 3;</code>
+       */
+      public edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessageOrBuilder getMessageTypeOrBuilder() {
+        if ((msgCase_ == 3) && (messageTypeBuilder_ != null)) {
+          return messageTypeBuilder_.getMessageOrBuilder();
+        } else {
+          if (msgCase_ == 3) {
+            return (edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage) msg_;
+          }
+          return edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.getDefaultInstance();
+        }
+      }
+      /**
+       * <code>.StorageEmptyMessage messageType = 3;</code>
+       */
+      private com.google.protobuf.SingleFieldBuilderV3<
+          edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage, edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.Builder, edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessageOrBuilder> 
+          getMessageTypeFieldBuilder() {
+        if (messageTypeBuilder_ == null) {
+          if (!(msgCase_ == 3)) {
+            msg_ = edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.getDefaultInstance();
+          }
+          messageTypeBuilder_ = new com.google.protobuf.SingleFieldBuilderV3<
+              edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage, edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.Builder, edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessageOrBuilder>(
+                  (edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage) msg_,
+                  getParentForChildren(),
+                  isClean());
+          msg_ = null;
+        }
+        msgCase_ = 3;
+        onChanged();;
+        return messageTypeBuilder_;
+      }
       @java.lang.Override
       public final Builder setUnknownFields(
           final com.google.protobuf.UnknownFieldSet unknownFields) {
@@ -4182,6 +5160,607 @@ public final class Messages {
 
     @java.lang.Override
     public edu.usfca.cs.dfs.messages.Messages.Storage getDefaultInstanceForType() {
+      return DEFAULT_INSTANCE;
+    }
+
+  }
+
+  public interface StorageEmptyMessageOrBuilder extends
+      // @@protoc_insertion_point(interface_extends:StorageEmptyMessage)
+      com.google.protobuf.MessageOrBuilder {
+
+    /**
+     * <code>.StorageEmptyMessage.MessageType messageType = 1;</code>
+     */
+    int getMessageTypeValue();
+    /**
+     * <code>.StorageEmptyMessage.MessageType messageType = 1;</code>
+     */
+    edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.MessageType getMessageType();
+  }
+  /**
+   * Protobuf type {@code StorageEmptyMessage}
+   */
+  public  static final class StorageEmptyMessage extends
+      com.google.protobuf.GeneratedMessageV3 implements
+      // @@protoc_insertion_point(message_implements:StorageEmptyMessage)
+      StorageEmptyMessageOrBuilder {
+  private static final long serialVersionUID = 0L;
+    // Use StorageEmptyMessage.newBuilder() to construct.
+    private StorageEmptyMessage(com.google.protobuf.GeneratedMessageV3.Builder<?> builder) {
+      super(builder);
+    }
+    private StorageEmptyMessage() {
+      messageType_ = 0;
+    }
+
+    @java.lang.Override
+    @SuppressWarnings({"unused"})
+    protected java.lang.Object newInstance(
+        UnusedPrivateParameter unused) {
+      return new StorageEmptyMessage();
+    }
+
+    @java.lang.Override
+    public final com.google.protobuf.UnknownFieldSet
+    getUnknownFields() {
+      return this.unknownFields;
+    }
+    private StorageEmptyMessage(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      this();
+      if (extensionRegistry == null) {
+        throw new java.lang.NullPointerException();
+      }
+      com.google.protobuf.UnknownFieldSet.Builder unknownFields =
+          com.google.protobuf.UnknownFieldSet.newBuilder();
+      try {
+        boolean done = false;
+        while (!done) {
+          int tag = input.readTag();
+          switch (tag) {
+            case 0:
+              done = true;
+              break;
+            case 8: {
+              int rawValue = input.readEnum();
+
+              messageType_ = rawValue;
+              break;
+            }
+            default: {
+              if (!parseUnknownField(
+                  input, unknownFields, extensionRegistry, tag)) {
+                done = true;
+              }
+              break;
+            }
+          }
+        }
+      } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+        throw e.setUnfinishedMessage(this);
+      } catch (java.io.IOException e) {
+        throw new com.google.protobuf.InvalidProtocolBufferException(
+            e).setUnfinishedMessage(this);
+      } finally {
+        this.unknownFields = unknownFields.build();
+        makeExtensionsImmutable();
+      }
+    }
+    public static final com.google.protobuf.Descriptors.Descriptor
+        getDescriptor() {
+      return edu.usfca.cs.dfs.messages.Messages.internal_static_StorageEmptyMessage_descriptor;
+    }
+
+    @java.lang.Override
+    protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+        internalGetFieldAccessorTable() {
+      return edu.usfca.cs.dfs.messages.Messages.internal_static_StorageEmptyMessage_fieldAccessorTable
+          .ensureFieldAccessorsInitialized(
+              edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.class, edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.Builder.class);
+    }
+
+    /**
+     * Protobuf enum {@code StorageEmptyMessage.MessageType}
+     */
+    public enum MessageType
+        implements com.google.protobuf.ProtocolMessageEnum {
+      /**
+       * <code>AVAILABLE_SPACE = 0;</code>
+       */
+      AVAILABLE_SPACE(0),
+      UNRECOGNIZED(-1),
+      ;
+
+      /**
+       * <code>AVAILABLE_SPACE = 0;</code>
+       */
+      public static final int AVAILABLE_SPACE_VALUE = 0;
+
+
+      public final int getNumber() {
+        if (this == UNRECOGNIZED) {
+          throw new java.lang.IllegalArgumentException(
+              "Can't get the number of an unknown enum value.");
+        }
+        return value;
+      }
+
+      /**
+       * @deprecated Use {@link #forNumber(int)} instead.
+       */
+      @java.lang.Deprecated
+      public static MessageType valueOf(int value) {
+        return forNumber(value);
+      }
+
+      public static MessageType forNumber(int value) {
+        switch (value) {
+          case 0: return AVAILABLE_SPACE;
+          default: return null;
+        }
+      }
+
+      public static com.google.protobuf.Internal.EnumLiteMap<MessageType>
+          internalGetValueMap() {
+        return internalValueMap;
+      }
+      private static final com.google.protobuf.Internal.EnumLiteMap<
+          MessageType> internalValueMap =
+            new com.google.protobuf.Internal.EnumLiteMap<MessageType>() {
+              public MessageType findValueByNumber(int number) {
+                return MessageType.forNumber(number);
+              }
+            };
+
+      public final com.google.protobuf.Descriptors.EnumValueDescriptor
+          getValueDescriptor() {
+        return getDescriptor().getValues().get(ordinal());
+      }
+      public final com.google.protobuf.Descriptors.EnumDescriptor
+          getDescriptorForType() {
+        return getDescriptor();
+      }
+      public static final com.google.protobuf.Descriptors.EnumDescriptor
+          getDescriptor() {
+        return edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.getDescriptor().getEnumTypes().get(0);
+      }
+
+      private static final MessageType[] VALUES = values();
+
+      public static MessageType valueOf(
+          com.google.protobuf.Descriptors.EnumValueDescriptor desc) {
+        if (desc.getType() != getDescriptor()) {
+          throw new java.lang.IllegalArgumentException(
+            "EnumValueDescriptor is not for this type.");
+        }
+        if (desc.getIndex() == -1) {
+          return UNRECOGNIZED;
+        }
+        return VALUES[desc.getIndex()];
+      }
+
+      private final int value;
+
+      private MessageType(int value) {
+        this.value = value;
+      }
+
+      // @@protoc_insertion_point(enum_scope:StorageEmptyMessage.MessageType)
+    }
+
+    public static final int MESSAGETYPE_FIELD_NUMBER = 1;
+    private int messageType_;
+    /**
+     * <code>.StorageEmptyMessage.MessageType messageType = 1;</code>
+     */
+    public int getMessageTypeValue() {
+      return messageType_;
+    }
+    /**
+     * <code>.StorageEmptyMessage.MessageType messageType = 1;</code>
+     */
+    public edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.MessageType getMessageType() {
+      @SuppressWarnings("deprecation")
+      edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.MessageType result = edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.MessageType.valueOf(messageType_);
+      return result == null ? edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.MessageType.UNRECOGNIZED : result;
+    }
+
+    private byte memoizedIsInitialized = -1;
+    @java.lang.Override
+    public final boolean isInitialized() {
+      byte isInitialized = memoizedIsInitialized;
+      if (isInitialized == 1) return true;
+      if (isInitialized == 0) return false;
+
+      memoizedIsInitialized = 1;
+      return true;
+    }
+
+    @java.lang.Override
+    public void writeTo(com.google.protobuf.CodedOutputStream output)
+                        throws java.io.IOException {
+      if (messageType_ != edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.MessageType.AVAILABLE_SPACE.getNumber()) {
+        output.writeEnum(1, messageType_);
+      }
+      unknownFields.writeTo(output);
+    }
+
+    @java.lang.Override
+    public int getSerializedSize() {
+      int size = memoizedSize;
+      if (size != -1) return size;
+
+      size = 0;
+      if (messageType_ != edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.MessageType.AVAILABLE_SPACE.getNumber()) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeEnumSize(1, messageType_);
+      }
+      size += unknownFields.getSerializedSize();
+      memoizedSize = size;
+      return size;
+    }
+
+    @java.lang.Override
+    public boolean equals(final java.lang.Object obj) {
+      if (obj == this) {
+       return true;
+      }
+      if (!(obj instanceof edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage)) {
+        return super.equals(obj);
+      }
+      edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage other = (edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage) obj;
+
+      if (messageType_ != other.messageType_) return false;
+      if (!unknownFields.equals(other.unknownFields)) return false;
+      return true;
+    }
+
+    @java.lang.Override
+    public int hashCode() {
+      if (memoizedHashCode != 0) {
+        return memoizedHashCode;
+      }
+      int hash = 41;
+      hash = (19 * hash) + getDescriptor().hashCode();
+      hash = (37 * hash) + MESSAGETYPE_FIELD_NUMBER;
+      hash = (53 * hash) + messageType_;
+      hash = (29 * hash) + unknownFields.hashCode();
+      memoizedHashCode = hash;
+      return hash;
+    }
+
+    public static edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage parseFrom(
+        java.nio.ByteBuffer data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage parseFrom(
+        java.nio.ByteBuffer data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage parseFrom(
+        com.google.protobuf.ByteString data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage parseFrom(
+        com.google.protobuf.ByteString data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage parseFrom(byte[] data)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data);
+    }
+    public static edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage parseFrom(
+        byte[] data,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws com.google.protobuf.InvalidProtocolBufferException {
+      return PARSER.parseFrom(data, extensionRegistry);
+    }
+    public static edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage parseFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage parseFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage parseDelimitedFrom(java.io.InputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input);
+    }
+    public static edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage parseDelimitedFrom(
+        java.io.InputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseDelimitedWithIOException(PARSER, input, extensionRegistry);
+    }
+    public static edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage parseFrom(
+        com.google.protobuf.CodedInputStream input)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input);
+    }
+    public static edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage parseFrom(
+        com.google.protobuf.CodedInputStream input,
+        com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+        throws java.io.IOException {
+      return com.google.protobuf.GeneratedMessageV3
+          .parseWithIOException(PARSER, input, extensionRegistry);
+    }
+
+    @java.lang.Override
+    public Builder newBuilderForType() { return newBuilder(); }
+    public static Builder newBuilder() {
+      return DEFAULT_INSTANCE.toBuilder();
+    }
+    public static Builder newBuilder(edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage prototype) {
+      return DEFAULT_INSTANCE.toBuilder().mergeFrom(prototype);
+    }
+    @java.lang.Override
+    public Builder toBuilder() {
+      return this == DEFAULT_INSTANCE
+          ? new Builder() : new Builder().mergeFrom(this);
+    }
+
+    @java.lang.Override
+    protected Builder newBuilderForType(
+        com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+      Builder builder = new Builder(parent);
+      return builder;
+    }
+    /**
+     * Protobuf type {@code StorageEmptyMessage}
+     */
+    public static final class Builder extends
+        com.google.protobuf.GeneratedMessageV3.Builder<Builder> implements
+        // @@protoc_insertion_point(builder_implements:StorageEmptyMessage)
+        edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessageOrBuilder {
+      public static final com.google.protobuf.Descriptors.Descriptor
+          getDescriptor() {
+        return edu.usfca.cs.dfs.messages.Messages.internal_static_StorageEmptyMessage_descriptor;
+      }
+
+      @java.lang.Override
+      protected com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+          internalGetFieldAccessorTable() {
+        return edu.usfca.cs.dfs.messages.Messages.internal_static_StorageEmptyMessage_fieldAccessorTable
+            .ensureFieldAccessorsInitialized(
+                edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.class, edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.Builder.class);
+      }
+
+      // Construct using edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.newBuilder()
+      private Builder() {
+        maybeForceBuilderInitialization();
+      }
+
+      private Builder(
+          com.google.protobuf.GeneratedMessageV3.BuilderParent parent) {
+        super(parent);
+        maybeForceBuilderInitialization();
+      }
+      private void maybeForceBuilderInitialization() {
+        if (com.google.protobuf.GeneratedMessageV3
+                .alwaysUseFieldBuilders) {
+        }
+      }
+      @java.lang.Override
+      public Builder clear() {
+        super.clear();
+        messageType_ = 0;
+
+        return this;
+      }
+
+      @java.lang.Override
+      public com.google.protobuf.Descriptors.Descriptor
+          getDescriptorForType() {
+        return edu.usfca.cs.dfs.messages.Messages.internal_static_StorageEmptyMessage_descriptor;
+      }
+
+      @java.lang.Override
+      public edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage getDefaultInstanceForType() {
+        return edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.getDefaultInstance();
+      }
+
+      @java.lang.Override
+      public edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage build() {
+        edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage result = buildPartial();
+        if (!result.isInitialized()) {
+          throw newUninitializedMessageException(result);
+        }
+        return result;
+      }
+
+      @java.lang.Override
+      public edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage buildPartial() {
+        edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage result = new edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage(this);
+        result.messageType_ = messageType_;
+        onBuilt();
+        return result;
+      }
+
+      @java.lang.Override
+      public Builder clone() {
+        return super.clone();
+      }
+      @java.lang.Override
+      public Builder setField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.setField(field, value);
+      }
+      @java.lang.Override
+      public Builder clearField(
+          com.google.protobuf.Descriptors.FieldDescriptor field) {
+        return super.clearField(field);
+      }
+      @java.lang.Override
+      public Builder clearOneof(
+          com.google.protobuf.Descriptors.OneofDescriptor oneof) {
+        return super.clearOneof(oneof);
+      }
+      @java.lang.Override
+      public Builder setRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          int index, java.lang.Object value) {
+        return super.setRepeatedField(field, index, value);
+      }
+      @java.lang.Override
+      public Builder addRepeatedField(
+          com.google.protobuf.Descriptors.FieldDescriptor field,
+          java.lang.Object value) {
+        return super.addRepeatedField(field, value);
+      }
+      @java.lang.Override
+      public Builder mergeFrom(com.google.protobuf.Message other) {
+        if (other instanceof edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage) {
+          return mergeFrom((edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage)other);
+        } else {
+          super.mergeFrom(other);
+          return this;
+        }
+      }
+
+      public Builder mergeFrom(edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage other) {
+        if (other == edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.getDefaultInstance()) return this;
+        if (other.messageType_ != 0) {
+          setMessageTypeValue(other.getMessageTypeValue());
+        }
+        this.mergeUnknownFields(other.unknownFields);
+        onChanged();
+        return this;
+      }
+
+      @java.lang.Override
+      public final boolean isInitialized() {
+        return true;
+      }
+
+      @java.lang.Override
+      public Builder mergeFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws java.io.IOException {
+        edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage parsedMessage = null;
+        try {
+          parsedMessage = PARSER.parsePartialFrom(input, extensionRegistry);
+        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
+          parsedMessage = (edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage) e.getUnfinishedMessage();
+          throw e.unwrapIOException();
+        } finally {
+          if (parsedMessage != null) {
+            mergeFrom(parsedMessage);
+          }
+        }
+        return this;
+      }
+
+      private int messageType_ = 0;
+      /**
+       * <code>.StorageEmptyMessage.MessageType messageType = 1;</code>
+       */
+      public int getMessageTypeValue() {
+        return messageType_;
+      }
+      /**
+       * <code>.StorageEmptyMessage.MessageType messageType = 1;</code>
+       */
+      public Builder setMessageTypeValue(int value) {
+        messageType_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.StorageEmptyMessage.MessageType messageType = 1;</code>
+       */
+      public edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.MessageType getMessageType() {
+        @SuppressWarnings("deprecation")
+        edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.MessageType result = edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.MessageType.valueOf(messageType_);
+        return result == null ? edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.MessageType.UNRECOGNIZED : result;
+      }
+      /**
+       * <code>.StorageEmptyMessage.MessageType messageType = 1;</code>
+       */
+      public Builder setMessageType(edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage.MessageType value) {
+        if (value == null) {
+          throw new NullPointerException();
+        }
+        
+        messageType_ = value.getNumber();
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>.StorageEmptyMessage.MessageType messageType = 1;</code>
+       */
+      public Builder clearMessageType() {
+        
+        messageType_ = 0;
+        onChanged();
+        return this;
+      }
+      @java.lang.Override
+      public final Builder setUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.setUnknownFields(unknownFields);
+      }
+
+      @java.lang.Override
+      public final Builder mergeUnknownFields(
+          final com.google.protobuf.UnknownFieldSet unknownFields) {
+        return super.mergeUnknownFields(unknownFields);
+      }
+
+
+      // @@protoc_insertion_point(builder_scope:StorageEmptyMessage)
+    }
+
+    // @@protoc_insertion_point(class_scope:StorageEmptyMessage)
+    private static final edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage DEFAULT_INSTANCE;
+    static {
+      DEFAULT_INSTANCE = new edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage();
+    }
+
+    public static edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage getDefaultInstance() {
+      return DEFAULT_INSTANCE;
+    }
+
+    private static final com.google.protobuf.Parser<StorageEmptyMessage>
+        PARSER = new com.google.protobuf.AbstractParser<StorageEmptyMessage>() {
+      @java.lang.Override
+      public StorageEmptyMessage parsePartialFrom(
+          com.google.protobuf.CodedInputStream input,
+          com.google.protobuf.ExtensionRegistryLite extensionRegistry)
+          throws com.google.protobuf.InvalidProtocolBufferException {
+        return new StorageEmptyMessage(input, extensionRegistry);
+      }
+    };
+
+    public static com.google.protobuf.Parser<StorageEmptyMessage> parser() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public com.google.protobuf.Parser<StorageEmptyMessage> getParserForType() {
+      return PARSER;
+    }
+
+    @java.lang.Override
+    public edu.usfca.cs.dfs.messages.Messages.StorageEmptyMessage getDefaultInstanceForType() {
       return DEFAULT_INSTANCE;
     }
 
@@ -7241,10 +8820,20 @@ public final class Messages {
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_StorageLocationRequest_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_StorageSpace_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_StorageSpace_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_Storage_descriptor;
   private static final 
     com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
       internal_static_Storage_fieldAccessorTable;
+  private static final com.google.protobuf.Descriptors.Descriptor
+    internal_static_StorageEmptyMessage_descriptor;
+  private static final 
+    com.google.protobuf.GeneratedMessageV3.FieldAccessorTable
+      internal_static_StorageEmptyMessage_fieldAccessorTable;
   private static final com.google.protobuf.Descriptors.Descriptor
     internal_static_StorageNodeResponse_descriptor;
   private static final 
@@ -7277,22 +8866,29 @@ public final class Messages {
       "\n\016messages.proto\"p\n\014ProtoMessage\022!\n\ncont" +
       "roller\030\001 \001(\0132\013.ControllerH\000\022\033\n\007storage\030\002" +
       " \001(\0132\010.StorageH\000\022\031\n\006client\030\003 \001(\0132\007.Clien" +
-      "tH\000B\005\n\003msg\"s\n\nController\022#\n\013storageNode\030" +
-      "\001 \001(\0132\014.StorageNodeH\000\0229\n\026storageLocation" +
-      "Request\030\002 \001(\0132\027.StorageLocationRequestH\000" +
+      "tH\000B\005\n\003msg\"\232\001\n\nController\022#\n\013storageNode" +
+      "\030\001 \001(\0132\014.StorageNodeH\000\0229\n\026storageLocatio" +
+      "nRequest\030\002 \001(\0132\027.StorageLocationRequestH" +
+      "\000\022%\n\014StorageSpace\030\003 \001(\0132\r.StorageSpaceH\000" +
       "B\005\n\003msg\")\n\013StorageNode\022\014\n\004host\030\001 \001(\t\022\014\n\004" +
-      "port\030\002 \001(\005\"*\n\026StorageLocationRequest\022\020\n\010" +
-      "filename\030\001 \001(\t\"f\n\007Storage\022!\n\nstoreChunk\030" +
-      "\001 \001(\0132\013.StoreChunkH\000\0221\n\021storeNodeRespons" +
-      "e\030\002 \001(\0132\024.StorageNodeResponseH\000B\005\n\003msg\"#" +
-      "\n\023StorageNodeResponse\022\014\n\004flag\030\001 \001(\010\"e\n\nS" +
-      "toreChunk\022\020\n\010fileName\030\001 \001(\t\022\017\n\007chunkId\030\002" +
-      " \001(\005\022\014\n\004data\030\003 \001(\014\022&\n\020storageLocations\030\004" +
-      " \003(\0132\014.StorageNode\"L\n\006Client\022;\n\027storageL" +
-      "ocationResponse\030\001 \001(\0132\030.StorageLocationR" +
-      "esponseH\000B\005\n\003msg\":\n\027StorageLocationRespo" +
-      "nse\022\037\n\tlocations\030\001 \003(\0132\014.StorageNodeB\033\n\031" +
-      "edu.usfca.cs.dfs.messagesb\006proto3"
+      "port\030\002 \001(\005\"8\n\026StorageLocationRequest\022\020\n\010" +
+      "filename\030\001 \001(\t\022\014\n\004size\030\002 \001(\003\"&\n\014StorageS" +
+      "pace\022\026\n\016availableSpace\030\001 \001(\003\"\223\001\n\007Storage" +
+      "\022!\n\nstoreChunk\030\001 \001(\0132\013.StoreChunkH\000\0221\n\021s" +
+      "toreNodeResponse\030\002 \001(\0132\024.StorageNodeResp" +
+      "onseH\000\022+\n\013messageType\030\003 \001(\0132\024.StorageEmp" +
+      "tyMessageH\000B\005\n\003msg\"p\n\023StorageEmptyMessag" +
+      "e\0225\n\013messageType\030\001 \001(\0162 .StorageEmptyMes" +
+      "sage.MessageType\"\"\n\013MessageType\022\023\n\017AVAIL" +
+      "ABLE_SPACE\020\000\"#\n\023StorageNodeResponse\022\014\n\004f" +
+      "lag\030\001 \001(\010\"e\n\nStoreChunk\022\020\n\010fileName\030\001 \001(" +
+      "\t\022\017\n\007chunkId\030\002 \001(\005\022\014\n\004data\030\003 \001(\014\022&\n\020stor" +
+      "ageLocations\030\004 \003(\0132\014.StorageNode\"L\n\006Clie" +
+      "nt\022;\n\027storageLocationResponse\030\001 \001(\0132\030.St" +
+      "orageLocationResponseH\000B\005\n\003msg\":\n\027Storag" +
+      "eLocationResponse\022\037\n\tlocations\030\001 \003(\0132\014.S" +
+      "torageNodeB\033\n\031edu.usfca.cs.dfs.messagesb" +
+      "\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -7309,7 +8905,7 @@ public final class Messages {
     internal_static_Controller_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Controller_descriptor,
-        new java.lang.String[] { "StorageNode", "StorageLocationRequest", "Msg", });
+        new java.lang.String[] { "StorageNode", "StorageLocationRequest", "StorageSpace", "Msg", });
     internal_static_StorageNode_descriptor =
       getDescriptor().getMessageTypes().get(2);
     internal_static_StorageNode_fieldAccessorTable = new
@@ -7321,33 +8917,45 @@ public final class Messages {
     internal_static_StorageLocationRequest_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_StorageLocationRequest_descriptor,
-        new java.lang.String[] { "Filename", });
-    internal_static_Storage_descriptor =
+        new java.lang.String[] { "Filename", "Size", });
+    internal_static_StorageSpace_descriptor =
       getDescriptor().getMessageTypes().get(4);
+    internal_static_StorageSpace_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_StorageSpace_descriptor,
+        new java.lang.String[] { "AvailableSpace", });
+    internal_static_Storage_descriptor =
+      getDescriptor().getMessageTypes().get(5);
     internal_static_Storage_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Storage_descriptor,
-        new java.lang.String[] { "StoreChunk", "StoreNodeResponse", "Msg", });
+        new java.lang.String[] { "StoreChunk", "StoreNodeResponse", "MessageType", "Msg", });
+    internal_static_StorageEmptyMessage_descriptor =
+      getDescriptor().getMessageTypes().get(6);
+    internal_static_StorageEmptyMessage_fieldAccessorTable = new
+      com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
+        internal_static_StorageEmptyMessage_descriptor,
+        new java.lang.String[] { "MessageType", });
     internal_static_StorageNodeResponse_descriptor =
-      getDescriptor().getMessageTypes().get(5);
+      getDescriptor().getMessageTypes().get(7);
     internal_static_StorageNodeResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_StorageNodeResponse_descriptor,
         new java.lang.String[] { "Flag", });
     internal_static_StoreChunk_descriptor =
-      getDescriptor().getMessageTypes().get(6);
+      getDescriptor().getMessageTypes().get(8);
     internal_static_StoreChunk_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_StoreChunk_descriptor,
         new java.lang.String[] { "FileName", "ChunkId", "Data", "StorageLocations", });
     internal_static_Client_descriptor =
-      getDescriptor().getMessageTypes().get(7);
+      getDescriptor().getMessageTypes().get(9);
     internal_static_Client_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Client_descriptor,
         new java.lang.String[] { "StorageLocationResponse", "Msg", });
     internal_static_StorageLocationResponse_descriptor =
-      getDescriptor().getMessageTypes().get(8);
+      getDescriptor().getMessageTypes().get(10);
     internal_static_StorageLocationResponse_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_StorageLocationResponse_descriptor,

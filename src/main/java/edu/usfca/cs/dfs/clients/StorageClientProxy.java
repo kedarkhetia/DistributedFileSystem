@@ -18,6 +18,15 @@ public class StorageClientProxy {
         client.sendMessage(msg);
     }
     
+    public void getStorageSpace(Messages.StorageEmptyMessage storageSpace) {
+    	Messages.ProtoMessage msg = Messages.ProtoMessage.newBuilder()
+    			.setStorage(Messages.Storage.newBuilder()
+    					.setMessageType(storageSpace)
+    					.build())
+    			.build();
+    	client.sendMessage(msg);
+    }
+    
     public void disconnect() {
     	client.disconnect();
     }

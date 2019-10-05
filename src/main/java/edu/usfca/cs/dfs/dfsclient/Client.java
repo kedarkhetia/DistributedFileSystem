@@ -8,5 +8,6 @@ public class Client {
     public static void main(String args[]) throws IOException, InterruptedException, ExecutionException {
         DistributedFileSystem dfs = new DistributedFileSystem();
         dfs.put("filename.txt");
+        dfs.close();
     }
 }

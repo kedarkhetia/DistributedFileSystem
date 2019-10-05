@@ -16,6 +16,7 @@ message Controller {
     oneof msg {
         StorageNode storageNode = 1;
         StorageLocationRequest storageLocationRequest = 2;
+        StorageSpace StorageSpace = 3;
     }
 }
 
@@ -26,6 +27,11 @@ message StorageNode {
 
 message StorageLocationRequest {
     string filename = 1;
+    int64 size = 2;
+}
+
+message StorageSpace {
+	int64 availableSpace = 1;
 }
 
 // Storage Messages
@@ -33,7 +39,15 @@ message Storage {
     oneof msg {
         StoreChunk storeChunk = 1;
         StorageNodeResponse storeNodeResponse = 2;
+        StorageEmptyMessage messageType = 3;
     }
+}
+
+message StorageEmptyMessage {
+	enum MessageType {
+		AVAILABLE_SPACE = 0;
+	}
+	MessageType messageType = 1;
 }
 
 message StorageNodeResponse {

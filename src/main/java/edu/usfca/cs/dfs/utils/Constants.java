@@ -18,4 +18,18 @@ public class Constants {
     
     // Number of ChunkSize
     public static int CHUNK_SIZE = 1048570;
+    
+    // Storage path
+    public static String STORAGE_PATH = "./bigdata/";
+    
+    // BloomFilter Parameter primary
+    public static int PRIMARY_K = 3;
+    public static int PRIMARY_M = 100;
+    
+    // BloomFilter Parameter replica
+    public static int REPLICA_K = 3;
+    public static int REPLICA_M = 200;
+    
+    // Response Timeouts
+    public static int TIMEOUT = 3000;
 }

@@ -1,19 +1,29 @@
 package edu.usfca.cs.dfs.controller;
 
+import edu.usfca.cs.dfs.clients.StorageClientProxy;
 import edu.usfca.cs.dfs.messages.Messages;
+import edu.usfca.cs.dfs.utils.BloomFilter;
 import edu.usfca.cs.dfs.utils.Constants;
 
 import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 
 public class ControllerHandlers {
 
     private static List<Messages.StorageNode> nodeList = new LinkedList<>();
-    private static HashMap<String, List<Messages.StorageNode>> replicaMap = new HashMap<>(); 
     private static Random random = new Random();
+    private static ExecutorService threadPool = Executors.newFixedThreadPool(Constants.NUMBER_OF_THREADS);
+    private static Map<Messages.StorageNode, BloomFilter> primaryBloomFilter = new HashMap<>();
+    private static Map<Messages.StorageNode, BloomFilter> replicaBloomFilter = new HashMap<>();
 
     public static Messages.ProtoMessage register(Messages.StorageNode storageNode) {
         if(!nodeList.contains(storageNode)) {
             nodeList.add(storageNode);
+            primaryBloomFilter.put(storageNode, new BloomFilter(Constants.PRIMARY_K, Constants.PRIMARY_M));
+            replicaBloomFilter.put(storageNode, new BloomFilter(Constants.REPLICA_K, Constants.REPLICA_M));
             System.out.println("Added new storage node!");
         } else {
             System.out.println("Node already exist!");
@@ -25,30 +35,62 @@ public class ControllerHandlers {
                         .build())
                 .build();
     }
+    
+    // ToDo: deregister node when not able to connect.
 
-    public static Messages.ProtoMessage getStorageLocations(Messages.StorageLocationRequest request) {
-        int i = random.nextInt(nodeList.size());
-        Messages.StorageNode primary = nodeList.get(i);
-        Messages.StorageLocationResponse.Builder locationBuilder = Messages.StorageLocationResponse.newBuilder();
-        if(!replicaMap.containsKey(primary.getHost()+primary.getPort())) {
-        	LinkedList<Messages.StorageNode> locations = new LinkedList<>();
-        	locations.add(primary);
-        	System.out.print(primary.getHost()+primary.getPort() + " -> (");
-        	while(locations.size() != Constants.REPLICAS) {
-            	// ToDo: check if the random selected storage node has enough space to store chunk or not!
-        		int randint = random.nextInt(nodeList.size());
-                if(!locations.contains(nodeList.get(randint))) {
-                	locations.add(nodeList.get(randint));
-                	System.out.print(nodeList.get(randint).getHost()+nodeList.get(randint).getPort() + " ");
-                }
-            }
-        	System.out.println(")");
-        	replicaMap.put(primary.getHost()+primary.getPort(), locations);
+    public static Messages.ProtoMessage getStorageLocations(Messages.StorageLocationRequest request) throws InterruptedException, ExecutionException {
+        System.out.println(nodeList);
+    	int primaryIndex = random.nextInt(nodeList.size());
+        Messages.StorageNode primary = nodeList.get(primaryIndex);
+        while(!hasStorageSpace(request.getSize(), primary)) {
+        	primaryIndex = random.nextInt(nodeList.size());
+        	primary = nodeList.get(primaryIndex);
         }
-    	locationBuilder.addAllLocations(replicaMap.get(primary.getHost()+primary.getPort()));
+        primaryBloomFilter.get(primary).put(request.getFilename().getBytes());
+//        System.out.println(primary.getHost()+primary.getPort()+
+//        		": " + primaryBloomFilter.get(primary));
+        Messages.StorageLocationResponse.Builder locationBuilder = Messages.StorageLocationResponse.newBuilder();
+        LinkedList<Messages.StorageNode> locations = new LinkedList<>();
+        locations.add(primary);
+        int i = (primaryIndex + 1) % nodeList.size();
+        while(i != primaryIndex && locations.size() < Constants.REPLICAS) {
+        	if(hasStorageSpace(request.getSize(), nodeList.get(i))) {
+        		Messages.StorageNode replica = nodeList.get(i);
+        		locations.add(replica);
+        		replicaBloomFilter.get(replica).put(request.getFilename().getBytes());
+//        		System.out.println(replica.getHost()+replica.getPort()+
+//                		": " + primaryBloomFilter.get(replica));
+        	}
+        	i = (i+1) % nodeList.size();
+        }
+    	locationBuilder.addAllLocations(locations);
         Messages.Client clientMessage = Messages.Client.newBuilder()
                 .setStorageLocationResponse(locationBuilder.build()).build();
         Messages.ProtoMessage msg = Messages.ProtoMessage.newBuilder().setClient(clientMessage).build();
         return msg;
+    }
+    
+    private static boolean hasStorageSpace(long size, Messages.StorageNode storageNode) throws InterruptedException, ExecutionException {
+    	StorageClientProxy storageClientProxy = new StorageClientProxy(storageNode.getHost(), storageNode.getPort());
+    	storageClientProxy.getStorageSpace(Messages.StorageEmptyMessage.newBuilder()
+    			.setMessageType(Messages.StorageEmptyMessage.MessageType.AVAILABLE_SPACE).build());
+    	return size < getHasStorageNode().get();
+    }
+    
+    private static Future<Long> getHasStorageNode() {
+    	return threadPool.submit(() -> {
+    		synchronized(MessageDispatcher.storageSpace) {
+    			if(MessageDispatcher.storageSpace.get() == -1) {
+    				try {
+						MessageDispatcher.storageSpace.wait();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+    			}
+    			Long result = MessageDispatcher.storageSpace.get();
+    			MessageDispatcher.storageSpace.set(-1);
+    			return result;
+    		}
+    	});
     }
 }

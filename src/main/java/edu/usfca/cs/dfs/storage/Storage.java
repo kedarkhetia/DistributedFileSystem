@@ -12,8 +12,7 @@ public class Storage {
     public static volatile boolean flag = false;
 
     public static void main(String args[]) throws InterruptedException, IOException {
-    	StorageServer s = new StorageServer(7775);
-    	s.start();
+    	StorageServer s = new StorageServer(7771);
         Client controllerClient = new Client(Constants.CONTROLLER_HOSTNAME, Constants.CONTROLLER_PORT);
         Messages.ProtoMessage msgWrapper = Messages.ProtoMessage
                 .newBuilder()
@@ -22,11 +21,27 @@ public class Storage {
                         .setStorageNode(Messages.StorageNode
                                 .newBuilder()
                                 .setHost(Constants.STORAGE_HOSTNAME)
-                                .setPort(7775)
+                                .setPort(7771)
                                 .build())
                         .build())
                 .build();
         controllerClient.sendMessage(msgWrapper);
-        //controllerClient.disconnect();
+        Thread respThread = new Thread(new Runnable() {
+        	@Override
+        	public void run() {
+        		synchronized(MessageDispatcher.REGISTER_FLAG) {
+        			if(!MessageDispatcher.REGISTER_FLAG.get())
+						try {
+							MessageDispatcher.REGISTER_FLAG.wait(Constants.TIMEOUT);
+							controllerClient.disconnect();
+							MessageDispatcher.REGISTER_FLAG.set(false);
+						} catch (InterruptedException e) {
+							e.printStackTrace();
+						}
+        		}
+        	}
+        });
+        respThread.run();
+        s.start();
     }
 }
