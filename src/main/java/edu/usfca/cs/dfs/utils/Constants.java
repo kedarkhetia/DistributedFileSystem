@@ -21,6 +21,7 @@ public class Constants {
     
     // Storage path
     public static String STORAGE_PATH = "./bigdata/";
+    public static String REPLICA_PATH = "replica/";
     
     // BloomFilter Parameter primary
     public static int PRIMARY_K = 3;

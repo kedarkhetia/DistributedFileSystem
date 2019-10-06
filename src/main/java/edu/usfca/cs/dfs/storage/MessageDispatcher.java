@@ -17,12 +17,16 @@ public class MessageDispatcher {
         		REGISTER_FLAG.notifyAll();
         	}
         }
+        else if (message.hasUploadFile()) {
+        	return StorageHandlers.upload(message.getUploadFile());
+        }
         else if (message.hasStoreChunk()) {
         	StorageHandlers.store(message.getStoreChunk());
         }
         else if (message.hasMessageType()) {
         	return dispatch(message.getMessageType());
         }
+        
         return null;
     }
     

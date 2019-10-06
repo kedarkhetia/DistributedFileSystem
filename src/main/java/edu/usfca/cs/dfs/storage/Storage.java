@@ -12,7 +12,7 @@ public class Storage {
     public static volatile boolean flag = false;
 
     public static void main(String args[]) throws InterruptedException, IOException {
-    	StorageServer s = new StorageServer(7771);
+    	StorageServer s = new StorageServer(7774);
         Client controllerClient = new Client(Constants.CONTROLLER_HOSTNAME, Constants.CONTROLLER_PORT);
         Messages.ProtoMessage msgWrapper = Messages.ProtoMessage
                 .newBuilder()
@@ -21,7 +21,7 @@ public class Storage {
                         .setStorageNode(Messages.StorageNode
                                 .newBuilder()
                                 .setHost(Constants.STORAGE_HOSTNAME)
-                                .setPort(7771)
+                                .setPort(7774)
                                 .build())
                         .build())
                 .build();

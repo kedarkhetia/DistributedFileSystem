@@ -46,9 +46,6 @@ public class ControllerHandlers {
         	primaryIndex = random.nextInt(nodeList.size());
         	primary = nodeList.get(primaryIndex);
         }
-        primaryBloomFilter.get(primary).put(request.getFilename().getBytes());
-//        System.out.println(primary.getHost()+primary.getPort()+
-//        		": " + primaryBloomFilter.get(primary));
         Messages.StorageLocationResponse.Builder locationBuilder = Messages.StorageLocationResponse.newBuilder();
         LinkedList<Messages.StorageNode> locations = new LinkedList<>();
         locations.add(primary);
@@ -57,9 +54,6 @@ public class ControllerHandlers {
         	if(hasStorageSpace(request.getSize(), nodeList.get(i))) {
         		Messages.StorageNode replica = nodeList.get(i);
         		locations.add(replica);
-        		replicaBloomFilter.get(replica).put(request.getFilename().getBytes());
-//        		System.out.println(replica.getHost()+replica.getPort()+
-//                		": " + primaryBloomFilter.get(replica));
         	}
         	i = (i+1) % nodeList.size();
         }
@@ -92,5 +86,37 @@ public class ControllerHandlers {
     			return result;
     		}
     	});
+    }
+    
+    public static void updateBloomFilter(Messages.StoreProof storeProof) {
+    	if(storeProof.getStorageType() == Messages.StoreProof.StorageType.PRIMARY) {
+    		primaryBloomFilter.get(storeProof.getNode()).put(storeProof.getFilename().getBytes());
+    		System.out.println(storeProof.getNode().getHost() + storeProof.getNode().getPort() + " Primary: " + primaryBloomFilter);
+    	} else {
+    		replicaBloomFilter.get(storeProof.getNode()).put(storeProof.getFilename().getBytes());
+    		System.out.println(storeProof.getNode().getHost() + storeProof.getNode().getPort() + " Replica: " + replicaBloomFilter);
+    	}
+    }
+    
+    public static Messages.ProtoMessage getStoredLocations(Messages.StoredLocationRequest storedLocationRequest) {
+    	String filename = storedLocationRequest.getFilename();
+    	List<Messages.StorageNode> locations = new LinkedList<>();
+    	for(Messages.StorageNode node : primaryBloomFilter.keySet()) {
+    		if(primaryBloomFilter.get(node).get(filename.getBytes())) {
+    			locations.add(node);
+    		}
+    	}
+    	for(Messages.StorageNode node : replicaBloomFilter.keySet()) {
+    		if(replicaBloomFilter.get(node).get(filename.getBytes())) {
+    			locations.add(node);
+    		}
+    	}
+    	Messages.StoredLocationResponse.Builder locationBuilder = Messages.StoredLocationResponse.newBuilder();
+    	locationBuilder.addAllLocations(locations);
+    	locationBuilder.setFilename(storedLocationRequest.getFilename());
+    	return Messages.ProtoMessage.newBuilder()
+    			.setClient(Messages.Client.newBuilder()
+    					.setStoredLocationResponse(locationBuilder.build()))
+    			.build();
     }
 }

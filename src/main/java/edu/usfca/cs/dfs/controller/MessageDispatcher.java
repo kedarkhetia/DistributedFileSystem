@@ -22,6 +22,12 @@ public class MessageDispatcher {
         		storageSpace.notifyAll();
         	}
         }
+        else if (message.hasStoreProof()) {
+        	ControllerHandlers.updateBloomFilter(message.getStoreProof());
+        }
+        else if (message.hasStoredLocationRequest()) {
+        	return ControllerHandlers.getStoredLocations(message.getStoredLocationRequest());
+        }
         return null;
     }
 

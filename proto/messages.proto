@@ -17,7 +17,14 @@ message Controller {
         StorageNode storageNode = 1;
         StorageLocationRequest storageLocationRequest = 2;
         StorageSpace StorageSpace = 3;
+        StoreProof storeProof = 4;
+        StoredLocationRequest storedLocationRequest = 5;
     }
+}
+
+message StoredLocationRequest {
+	string filename = 1;
+	int32 chunkId = 2;
 }
 
 message StorageNode {
@@ -34,12 +41,25 @@ message StorageSpace {
 	int64 availableSpace = 1;
 }
 
+
+
+message StoreProof {
+	string filename = 1;
+	StorageNode node = 2;
+	StorageType storageType = 3;
+	enum StorageType {
+		PRIMARY = 0;
+		REPLICA = 1;
+	}
+}
+
 // Storage Messages
 message Storage {
     oneof msg {
         StoreChunk storeChunk = 1;
         StorageNodeResponse storeNodeResponse = 2;
         StorageEmptyMessage messageType = 3;
+        UploadFile uploadFile = 4;
     }
 }
 
@@ -61,15 +81,32 @@ message StoreChunk {
     repeated StorageNode storageLocations = 4;
 }
 
+message UploadFile {
+	string filename = 1;
+	StorageNode storageNode = 2;
+}
+
 // Client Messages
 message Client {
     oneof msg {
         StorageLocationResponse storageLocationResponse = 1;
+        StoredLocationResponse storedLocationResponse = 2;
+        DownloadFile downloadFile = 3;
     }
+}
+
+message DownloadFile {
+	bool fileFound = 1;
+	StoreChunk storeChunk = 2;
 }
 
 message StorageLocationResponse {
     repeated StorageNode locations = 1;
+}
+
+message StoredLocationResponse {
+	repeated StorageNode locations = 1;
+	string filename = 2;
 }
 
 

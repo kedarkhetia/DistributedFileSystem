@@ -10,21 +10,27 @@ public class StorageClientProxy {
     }
     
     public void upload(Messages.StoreChunk chunk) {
-        Messages.ProtoMessage msg = Messages.ProtoMessage.newBuilder()
+        client.sendMessage(Messages.ProtoMessage.newBuilder()
                 .setStorage(Messages.Storage.newBuilder()
                 		.setStoreChunk(chunk)
                 		.build())
-                .build();
-        client.sendMessage(msg);
+                .build());
     }
     
-    public void getStorageSpace(Messages.StorageEmptyMessage storageSpace) {
-    	Messages.ProtoMessage msg = Messages.ProtoMessage.newBuilder()
+    public void getStorageSpace(Messages.StorageEmptyMessage storageSpace) { 
+    	client.sendMessage(Messages.ProtoMessage.newBuilder()
     			.setStorage(Messages.Storage.newBuilder()
     					.setMessageType(storageSpace)
     					.build())
-    			.build();
-    	client.sendMessage(msg);
+    			.build());
+    }
+    
+    public void download(Messages.UploadFile uploadFile) {
+    	client.sendMessage(Messages.ProtoMessage.newBuilder()
+    			.setStorage(Messages.Storage.newBuilder()
+    					.setUploadFile(uploadFile)
+    					.build())
+    			.build()); 
     }
     
     public void disconnect() {
