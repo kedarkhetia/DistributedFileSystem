@@ -7,7 +7,6 @@ import edu.usfca.cs.dfs.utils.Constants;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
@@ -124,8 +123,6 @@ public class DistributedFileSystem {
     
     public boolean get(String storagePath, String filename) throws InterruptedException, ExecutionException, IOException {
     	int chunkCount = fileToChunkMap.get(filename);
-    	File file = new File(storagePath+filename);
-    	System.out.println("Can Write? " + file.canWrite());
     	Path path = Paths.get(storagePath+filename);
     	Files.deleteIfExists(path);
 		if(!Files.exists(path)) {
@@ -145,7 +142,6 @@ public class DistributedFileSystem {
 					return false;
 				}
 				String data = downloadedChunk.getStoreChunk().getData().toStringUtf8();
-				System.out.println(data.hashCode());
 				writer.write(data, 0, data.length());
 			}
 		}
@@ -174,7 +170,6 @@ public class DistributedFileSystem {
     		synchronized(MessageDispatcher.chunkToData) {
 				while(!MessageDispatcher.chunkToData.containsKey(chunkName)) {
 					try {
-						System.out.println(chunkName);
 						MessageDispatcher.chunkToData.wait();
 					} catch (InterruptedException e) {
 						e.printStackTrace();

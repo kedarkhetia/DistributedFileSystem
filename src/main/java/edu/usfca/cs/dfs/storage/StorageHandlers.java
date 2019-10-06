@@ -93,8 +93,8 @@ public class StorageHandlers {
 			int count = 0;
 			while((read = in.read()) != -1) {
 				data[count] = (byte) read;
+				count++;
 			}
-			System.out.println(ByteString.copyFrom(data).toStringUtf8().hashCode());
 			return Messages.ProtoMessage.newBuilder()
 					.setClient(Messages.Client.newBuilder()
 							.setDownloadFile(Messages.DownloadFile.newBuilder()
