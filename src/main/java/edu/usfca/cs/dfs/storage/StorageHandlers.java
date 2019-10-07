@@ -73,7 +73,7 @@ public class StorageHandlers {
 					ControllerClientProxy contorllerClientProxy = new ControllerClientProxy();
 					try {
 						contorllerClientProxy.sendHeartbeat(Files.getFileStore(Paths.get(STORAGE_PATH)).getUsableSpace()
-								, selfPort, Messages.StorageNode.newBuilder()
+								, processedRequest, Messages.StorageNode.newBuilder()
 									.setHost(selfHostName)
 									.setPort(selfPort)
 									.build());
