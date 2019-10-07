@@ -17,14 +17,6 @@ public class StorageClientProxy {
                 .build());
     }
     
-    public void getStorageSpace(Messages.StorageEmptyMessage storageSpace) { 
-    	client.sendMessage(Messages.ProtoMessage.newBuilder()
-    			.setStorage(Messages.Storage.newBuilder()
-    					.setMessageType(storageSpace)
-    					.build())
-    			.build());
-    }
-    
     public void download(Messages.UploadFile uploadFile) {
     	client.sendMessage(Messages.ProtoMessage.newBuilder()
     			.setStorage(Messages.Storage.newBuilder()

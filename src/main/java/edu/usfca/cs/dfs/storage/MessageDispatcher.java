@@ -18,22 +18,13 @@ public class MessageDispatcher {
         	}
         }
         else if (message.hasUploadFile()) {
-        	return StorageHandlers.upload(message.getUploadFile());
+        	return StorageHandlers.retrive(message.getUploadFile());
         }
         else if (message.hasStoreChunk()) {
         	StorageHandlers.store(message.getStoreChunk());
-        }
-        else if (message.hasMessageType()) {
-        	return dispatch(message.getMessageType());
         }
         
         return null;
     }
     
-    private static Messages.ProtoMessage dispatch(Messages.StorageEmptyMessage message) throws IOException {
-    	if(message.getMessageType() == Messages.StorageEmptyMessage.MessageType.AVAILABLE_SPACE) {
-    		return StorageHandlers.getAvailableSpace();
-    	}
-    	return null;
-    }
 }

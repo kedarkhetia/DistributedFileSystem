@@ -21,6 +21,7 @@ public class Controller {
     	ControllerHandlers.CONFIG = gson.fromJson(readFile(Paths.get(args[1])), Config.class);
         ControllerServer s = new ControllerServer(ControllerHandlers.CONFIG.getPort());
         s.start();
+        ControllerHandlers.monitorHeartBeats();
     }
     
     public static String readFile(Path path) throws IOException  {

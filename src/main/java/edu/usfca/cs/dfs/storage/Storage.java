@@ -2,13 +2,14 @@ package edu.usfca.cs.dfs.storage;
 
 import edu.usfca.cs.dfs.messages.Messages;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.HashMap;
 import java.util.Map;
 
 import edu.usfca.cs.dfs.clients.Client;
-import edu.usfca.cs.dfs.utils.Constants;
 
 public class Storage {
 
@@ -24,6 +25,7 @@ public class Storage {
     	if(argsMap.size() == 3 && argsMap.containsKey(STORAGE_KEY) && 
     			argsMap.containsKey(CONTORLLER_HOSTNAME) && argsMap.containsKey(CONTROLLER_PORT)) {
     		StorageHandlers.STORAGE_PATH = argsMap.get(STORAGE_KEY);
+    		StorageHandlers.clearStoragePath(new File(StorageHandlers.STORAGE_PATH));
     		startStorageServer(argsMap.get(CONTORLLER_HOSTNAME), Integer.parseInt(argsMap.get(CONTROLLER_PORT)));
     	} 
     	else {
@@ -31,8 +33,9 @@ public class Storage {
     	}
     }
     
-    public static void startStorageServer(String controllerHost, int controllerPort) throws IOException {
-    	StorageServer s = new StorageServer(7774);
+    public static void startStorageServer(String controllerHost, int controllerPort) throws IOException, InterruptedException {
+    	int port = 7774;
+    	StorageServer s = new StorageServer(port);
         Client controllerClient = new Client(controllerHost, controllerPort);
         Messages.ProtoMessage msgWrapper = Messages.ProtoMessage
                 .newBuilder()
@@ -41,7 +44,7 @@ public class Storage {
                         .setStorageNode(Messages.StorageNode
                                 .newBuilder()
                                 .setHost(InetAddress.getLocalHost().getHostAddress())
-                                .setPort(7774)
+                                .setPort(port)
                                 .build())
                         .build())
                 .build();
@@ -50,14 +53,16 @@ public class Storage {
         	@Override
         	public void run() {
         		synchronized(MessageDispatcher.REGISTER_FLAG) {
-        			if(!MessageDispatcher.REGISTER_FLAG.get())
+        			if(!MessageDispatcher.REGISTER_FLAG.get()) {
 						try {
-							MessageDispatcher.REGISTER_FLAG.wait(Constants.TIMEOUT);
+							MessageDispatcher.REGISTER_FLAG.wait(3000);
 							controllerClient.disconnect();
 							MessageDispatcher.REGISTER_FLAG.set(false);
-						} catch (InterruptedException e) {
+							StorageHandlers.startHeartbeat(InetAddress.getLocalHost().getHostAddress(), port);
+						} catch (InterruptedException | UnknownHostException e) {
 							e.printStackTrace();
 						}
+        			}
         		}
         	}
         });

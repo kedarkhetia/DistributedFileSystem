@@ -1,32 +1,32 @@
 package edu.usfca.cs.dfs.controller;
 
-import edu.usfca.cs.dfs.clients.StorageClientProxy;
 import edu.usfca.cs.dfs.messages.Messages;
 import edu.usfca.cs.dfs.utils.BloomFilter;
 import edu.usfca.cs.dfs.utils.Constants;
 
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 
 public class ControllerHandlers {
 
     private static List<Messages.StorageNode> nodeList = new LinkedList<>();
     private static Random random = new Random();
     private static ExecutorService threadPool = Executors.newFixedThreadPool(Constants.NUMBER_OF_THREADS);
-    private static Map<Messages.StorageNode, BloomFilter> primaryBloomFilter = new HashMap<>();
-    private static Map<Messages.StorageNode, BloomFilter> replicaBloomFilter = new HashMap<>();
+    private static Map<Messages.StorageNode, HeartbeatModel> heartbeatMap = new ConcurrentHashMap<>();
     
     public static Config CONFIG;
 
     public static Messages.ProtoMessage register(Messages.StorageNode storageNode) {
         if(!nodeList.contains(storageNode)) {
             nodeList.add(storageNode);
-            primaryBloomFilter.put(storageNode, new BloomFilter(CONFIG.getPrimaryK(), CONFIG.getPrimaryM()));
-            replicaBloomFilter.put(storageNode, new BloomFilter(CONFIG.getReplicaK(), CONFIG.getReplicaM()));
-            System.out.println("Added new storage node!");
+            HeartbeatModel heartbeat = new HeartbeatModel();
+            heartbeat.setReplica(new BloomFilter(CONFIG.getReplicaK(), CONFIG.getReplicaM()));
+            heartbeat.setPrimary(new BloomFilter(CONFIG.getPrimaryK(), CONFIG.getPrimaryM()));
+            heartbeatMap.put(storageNode, heartbeat);
+            System.out.println("Added new storage node! " + storageNode.getHost() + ":" + storageNode.getPort());
         } else {
             System.out.println("Node already exist!");
         }
@@ -41,7 +41,7 @@ public class ControllerHandlers {
     // ToDo: deregister node when not able to connect.
 
     public static Messages.ProtoMessage getStorageLocations(Messages.StorageLocationRequest request) throws InterruptedException, ExecutionException {
-        System.out.println(nodeList);
+        //System.out.println(nodeList);
     	int primaryIndex = random.nextInt(nodeList.size());
         Messages.StorageNode primary = nodeList.get(primaryIndex);
         while(!hasStorageSpace(request.getSize(), primary)) {
@@ -67,49 +67,36 @@ public class ControllerHandlers {
     }
     
     private static boolean hasStorageSpace(long size, Messages.StorageNode storageNode) throws InterruptedException, ExecutionException {
-    	StorageClientProxy storageClientProxy = new StorageClientProxy(storageNode.getHost(), storageNode.getPort());
-    	storageClientProxy.getStorageSpace(Messages.StorageEmptyMessage.newBuilder()
-    			.setMessageType(Messages.StorageEmptyMessage.MessageType.AVAILABLE_SPACE).build());
-    	return size < getHasStorageNode().get();
+    	HeartbeatModel heartbeat = heartbeatMap.get(storageNode);
+    	return size < heartbeat.getAvailableSpace();
     }
     
-    private static Future<Long> getHasStorageNode() {
-    	return threadPool.submit(() -> {
-    		synchronized(MessageDispatcher.storageSpace) {
-    			if(MessageDispatcher.storageSpace.get() == -1) {
-    				try {
-						MessageDispatcher.storageSpace.wait();
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
-    			}
-    			Long result = MessageDispatcher.storageSpace.get();
-    			MessageDispatcher.storageSpace.set(-1);
-    			return result;
-    		}
-    	});
+    public static void setHeartbeat(Messages.Heartbeat heartbeat) {
+    	System.out.println("Received Heartbeat From: " + heartbeat.getStorageNode().getHost() + ":" + heartbeat.getStorageNode().getPort());
+		HeartbeatModel heartbeatModel = heartbeatMap.get(heartbeat.getStorageNode());
+		heartbeatModel.setAvailableSpace(heartbeat.getAvailableSpace());
+		heartbeatModel.setProcessedRequests(heartbeat.getProcessedRequests());
+		heartbeatModel.setTimestamp(System.currentTimeMillis());
     }
     
     public static void updateBloomFilter(Messages.StoreProof storeProof) {
     	if(storeProof.getStorageType() == Messages.StoreProof.StorageType.PRIMARY) {
-    		primaryBloomFilter.get(storeProof.getNode()).put(storeProof.getFilename().getBytes());
-    		System.out.println(storeProof.getNode().getHost() + storeProof.getNode().getPort() + " Primary: " + primaryBloomFilter);
+    		heartbeatMap.get(storeProof.getNode()).getPrimary().put(storeProof.getFilename().getBytes());
+    		//System.out.println(storeProof.getNode().getHost() + storeProof.getNode().getPort() + " Primary: " + primaryBloomFilter);
     	} else {
-    		replicaBloomFilter.get(storeProof.getNode()).put(storeProof.getFilename().getBytes());
-    		System.out.println(storeProof.getNode().getHost() + storeProof.getNode().getPort() + " Replica: " + replicaBloomFilter);
+    		heartbeatMap.get(storeProof.getNode()).getReplica().put(storeProof.getFilename().getBytes());
+    		//System.out.println(storeProof.getNode().getHost() + storeProof.getNode().getPort() + " Replica: " + replicaBloomFilter);
     	}
     }
     
     public static Messages.ProtoMessage getStoredLocations(Messages.StoredLocationRequest storedLocationRequest) {
     	String filename = storedLocationRequest.getFilename();
     	List<Messages.StorageNode> locations = new LinkedList<>();
-    	for(Messages.StorageNode node : primaryBloomFilter.keySet()) {
-    		if(primaryBloomFilter.get(node).get(filename.getBytes())) {
+    	for(Messages.StorageNode node : heartbeatMap.keySet()) {
+    		if(heartbeatMap.get(node).getPrimary().get(filename.getBytes())) {
     			locations.add(node);
     		}
-    	}
-    	for(Messages.StorageNode node : replicaBloomFilter.keySet()) {
-    		if(replicaBloomFilter.get(node).get(filename.getBytes())) {
+    		else if(heartbeatMap.get(node).getReplica().get(filename.getBytes())) {
     			locations.add(node);
     		}
     	}
@@ -120,5 +107,32 @@ public class ControllerHandlers {
     			.setClient(Messages.Client.newBuilder()
     					.setStoredLocationResponse(locationBuilder.build()))
     			.build();
+    }
+    
+    public static void monitorHeartBeats() {
+    	threadPool.execute(new Runnable() {
+    		@Override
+    		public void run() {
+    			long cap = 2000; // Cap for 2000 milliseconds 
+    			while(true) {
+    				List<Messages.StorageNode> removeNodes = new LinkedList<>();
+        			for(Messages.StorageNode node : heartbeatMap.keySet()) {
+        				HeartbeatModel heartbeat = heartbeatMap.get(node);
+        				if(System.currentTimeMillis() - heartbeat.getTimestamp() > Constants.HEARTBEAT_INTERVAL + cap) {
+        					removeNodes.add(node);
+        				}
+        			}
+        			for(Messages.StorageNode node : removeNodes) {
+        				heartbeatMap.remove(node);
+        				System.out.println("Heartbeat not received, Removing node: " + node);
+        			}
+        			try {
+						Thread.sleep(1000); // check every second
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					}
+    			}
+    		}
+     	});
     }
 }

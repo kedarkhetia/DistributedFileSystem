@@ -43,6 +43,18 @@ public class ControllerClientProxy {
     			.build());
     }
     
+    public void sendHeartbeat(long availableSpace, long processedRequest, Messages.StorageNode node) {
+    	client.sendMessage(Messages.ProtoMessage.newBuilder()
+    			.setController(Messages.Controller.newBuilder()
+    					.setHeartbeat(Messages.Heartbeat.newBuilder()
+    							.setAvailableSpace(availableSpace)
+    							.setProcessedRequests(processedRequest)
+    							.setStorageNode(node)
+    							.build())
+    					.build())
+    			.build());
+    }
+    
     public void disconnect() {
     	client.disconnect();
     }

@@ -16,7 +16,7 @@ message Controller {
     oneof msg {
         StorageNode storageNode = 1;
         StorageLocationRequest storageLocationRequest = 2;
-        StorageSpace StorageSpace = 3;
+        Heartbeat heartbeat = 3;
         StoreProof storeProof = 4;
         StoredLocationRequest storedLocationRequest = 5;
     }
@@ -37,11 +37,11 @@ message StorageLocationRequest {
     int64 size = 2;
 }
 
-message StorageSpace {
+message Heartbeat {
 	int64 availableSpace = 1;
+	int64 processedRequests = 2;
+	StorageNode storageNode = 3;
 }
-
-
 
 message StoreProof {
 	string filename = 1;
@@ -58,16 +58,8 @@ message Storage {
     oneof msg {
         StoreChunk storeChunk = 1;
         StorageNodeResponse storeNodeResponse = 2;
-        StorageEmptyMessage messageType = 3;
         UploadFile uploadFile = 4;
     }
-}
-
-message StorageEmptyMessage {
-	enum MessageType {
-		AVAILABLE_SPACE = 0;
-	}
-	MessageType messageType = 1;
 }
 
 message StorageNodeResponse {

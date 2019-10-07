@@ -18,11 +18,13 @@ import com.google.protobuf.ByteString;
 import edu.usfca.cs.dfs.clients.ControllerClientProxy;
 import edu.usfca.cs.dfs.clients.StorageClientProxy;
 import edu.usfca.cs.dfs.messages.Messages;
+import edu.usfca.cs.dfs.messages.Messages.Controller;
 import edu.usfca.cs.dfs.utils.Constants;
 
 public class StorageHandlers {
 	
 	public static String STORAGE_PATH;
+	private static long processedRequest = 0;
 	
 	public static void store(Messages.StoreChunk chunk) throws IOException {
 		List<Messages.StorageNode> locations = chunk.getStorageLocationsList();
@@ -59,21 +61,35 @@ public class StorageHandlers {
 		}
 		ControllerClientProxy controllerProxy = new ControllerClientProxy();
 		controllerProxy.sendStorageProof(chunk.getFileName(), storageType, location);
+		processedRequest++;
 		controllerProxy.disconnect();
 	}
 	
-	public static Messages.ProtoMessage getAvailableSpace() throws IOException {
-		FileStore store = Files.getFileStore(Paths.get(STORAGE_PATH));
-		return Messages.ProtoMessage
-				.newBuilder().setController(Messages.Controller
-						.newBuilder().setStorageSpace(Messages.StorageSpace
-								.newBuilder().setAvailableSpace(store.getUsableSpace())
-								.build())
-						.build())
-				.build();
+	public static void startHeartbeat(String selfHostName, int selfPort) throws InterruptedException {
+		Thread heartbeatThread = new Thread(new Runnable() {
+			@Override
+			public void run() {
+				while(true) {
+					ControllerClientProxy contorllerClientProxy = new ControllerClientProxy();
+					try {
+						contorllerClientProxy.sendHeartbeat(Files.getFileStore(Paths.get(STORAGE_PATH)).getUsableSpace()
+								, selfPort, Messages.StorageNode.newBuilder()
+									.setHost(selfHostName)
+									.setPort(selfPort)
+									.build());
+						Thread.sleep(Constants.HEARTBEAT_INTERVAL);
+					} catch (IOException | InterruptedException e) {
+						e.printStackTrace();
+					}
+					contorllerClientProxy.disconnect();
+				}
+			}
+		});
+		heartbeatThread.start();
+		heartbeatThread.join();
 	}
 	
-	public static Messages.ProtoMessage upload(Messages.UploadFile uploadFile) throws IOException {
+	public static Messages.ProtoMessage retrive(Messages.UploadFile uploadFile) throws IOException {
 		String filePath = STORAGE_PATH + uploadFile.getStorageNode().getHost()
 				+ uploadFile.getStorageNode().getPort() + "/";
 		File file = new File(filePath + uploadFile.getFilename());
@@ -101,6 +117,7 @@ public class StorageHandlers {
 				data[count] = (byte) read;
 				count++;
 			}
+			processedRequest++;
 			return Messages.ProtoMessage.newBuilder()
 					.setClient(Messages.Client.newBuilder()
 							.setDownloadFile(Messages.DownloadFile.newBuilder()
@@ -113,6 +130,15 @@ public class StorageHandlers {
 							.build())
 					.build();
 		}
+	}
+
+	public static void clearStoragePath(File directory) {
+		File[] allContents = directory.listFiles();
+	    if (allContents != null) {
+	        for (File file : allContents) {
+	        	clearStoragePath(file);
+	        }
+	    }
 	}
 
 }
