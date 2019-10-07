@@ -9,10 +9,10 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -37,7 +37,7 @@ public class DistributedFileSystem {
 
     public void put(String filename) throws IOException, InterruptedException, ExecutionException {
     	Path path = Paths.get(filename);
-        try(BufferedReader in = Files.newBufferedReader(path, Charset.forName("UTF-8"))) {
+        try(BufferedReader in = Files.newBufferedReader(path, StandardCharsets.ISO_8859_1)) {
             int readBytes;
             byte[] data;
             int count = (int) Files.size(path) / chunkSize;
@@ -124,13 +124,12 @@ public class DistributedFileSystem {
     public boolean get(String storagePath, String filename) throws InterruptedException, ExecutionException, IOException {
     	int chunkCount = fileToChunkMap.get(filename);
     	Path path = Paths.get(storagePath+filename);
-    	Files.deleteIfExists(path);
 		if(!Files.exists(path)) {
 			Files.createDirectories(path.getParent());
 			Files.createFile(path);
 		}
 		List<Future<Messages.DownloadFile>> writeTaskCallbacks = new LinkedList<>();
-		try(BufferedWriter writer = Files.newBufferedWriter(path, Charset.forName("UTF-8"), StandardOpenOption.WRITE)) {
+		try(BufferedWriter writer = Files.newBufferedWriter(path, StandardCharsets.ISO_8859_1)) {
 			for(int i=0; i < chunkCount; i++) {
 	    		String chunkName = filename + CHUNK_SUFFIX + i;
 	    		List<Messages.StorageNode> locations = getStoredNodes(chunkName, i).get();
@@ -141,7 +140,7 @@ public class DistributedFileSystem {
 				if(downloadedChunk == null) {
 					return false;
 				}
-				String data = downloadedChunk.getStoreChunk().getData().toStringUtf8();
+				String data = downloadedChunk.getStoreChunk().getData().toString(Charset.forName("ISO_8859_1"));
 				writer.write(data, 0, data.length());
 			}
 		}

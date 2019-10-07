@@ -1,0 +1,8 @@
+{
+	"primaryK": "3",
+	"primaryM": "100",
+	"replicaK": "3",
+	"replicaM": "200",
+	"replicaCount": "3",
+	"port": "7777"	
+}

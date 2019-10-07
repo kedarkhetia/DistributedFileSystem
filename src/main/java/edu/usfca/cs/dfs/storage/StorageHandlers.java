@@ -5,6 +5,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.FileStore;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -21,11 +22,16 @@ import edu.usfca.cs.dfs.utils.Constants;
 
 public class StorageHandlers {
 	
+	public static String STORAGE_PATH;
+	
 	public static void store(Messages.StoreChunk chunk) throws IOException {
 		List<Messages.StorageNode> locations = chunk.getStorageLocationsList();
 		Messages.StorageNode location = locations.get(0);
 		Messages.StoreProof.StorageType storageType = Messages.StoreProof.StorageType.PRIMARY;
-		String pathString = Constants.STORAGE_PATH + location.getHost() + location.getPort() + "/";
+		// ToDo: Remove this before sumbitting
+		String pathString = STORAGE_PATH + location.getHost() + location.getPort() + "/"; 
+		// ToDo: Uncomment this before submitting
+		// String pathString = STORAGE_PATH;
 		if(locations.size() == 2 || locations.size() == 1) {
 			pathString += Constants.REPLICA_PATH;
 			storageType = Messages.StoreProof.StorageType.REPLICA;
@@ -37,9 +43,9 @@ public class StorageHandlers {
 			Files.createDirectories(path.getParent());
 			Files.createFile(path);
 		}
-		BufferedWriter writer = Files.newBufferedWriter(path, Charset.forName("UTF-8"));
-		String data = chunk.getData().toStringUtf8();
-		writer.write(data, 0, data.length());
+		BufferedWriter writer = Files.newBufferedWriter(path, StandardCharsets.ISO_8859_1);
+		String data = chunk.getData().toString(Charset.forName("ISO_8859_1"));
+		writer.write(data, 0, chunk.getData().toByteArray().length);
 		writer.close();
 		if(!locations.isEmpty()) {
 			StorageClientProxy storageClientProxy = new StorageClientProxy(location.getHost(), location.getPort());
@@ -57,7 +63,7 @@ public class StorageHandlers {
 	}
 	
 	public static Messages.ProtoMessage getAvailableSpace() throws IOException {
-		FileStore store = Files.getFileStore(Paths.get(Constants.STORAGE_PATH));
+		FileStore store = Files.getFileStore(Paths.get(STORAGE_PATH));
 		return Messages.ProtoMessage
 				.newBuilder().setController(Messages.Controller
 						.newBuilder().setStorageSpace(Messages.StorageSpace
@@ -68,7 +74,7 @@ public class StorageHandlers {
 	}
 	
 	public static Messages.ProtoMessage upload(Messages.UploadFile uploadFile) throws IOException {
-		String filePath = Constants.STORAGE_PATH + uploadFile.getStorageNode().getHost()
+		String filePath = STORAGE_PATH + uploadFile.getStorageNode().getHost()
 				+ uploadFile.getStorageNode().getPort() + "/";
 		File file = new File(filePath + uploadFile.getFilename());
 		if(!file.exists()) {
@@ -87,7 +93,7 @@ public class StorageHandlers {
 			}
 		}
 		Path path = Paths.get(filePath + uploadFile.getFilename());
-		try(BufferedReader in = Files.newBufferedReader(path, Charset.forName("UTF-8"))) {
+		try(BufferedReader in = Files.newBufferedReader(path, StandardCharsets.ISO_8859_1)) {
 			int read;
 			byte[] data = new byte[(int) Files.size(path)];
 			int count = 0;

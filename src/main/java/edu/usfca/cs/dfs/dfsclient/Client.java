@@ -7,8 +7,8 @@ public class Client {
 
     public static void main(String args[]) throws IOException, InterruptedException, ExecutionException {
         DistributedFileSystem dfs = new DistributedFileSystem();
-        dfs.put("filename.txt");
-        boolean flag = dfs.get("./bigdata/retrived/","filename.txt");
+        dfs.put("LinkStores.pdf");
+        boolean flag = dfs.get("./bigdata/retrived/","LinkStores.pdf");
         if(flag) {
         	System.out.println("Got data succeccfully");
         }

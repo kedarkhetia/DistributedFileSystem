@@ -3,25 +3,45 @@ package edu.usfca.cs.dfs.storage;
 import edu.usfca.cs.dfs.messages.Messages;
 
 import java.io.IOException;
+import java.net.InetAddress;
+import java.util.HashMap;
+import java.util.Map;
 
 import edu.usfca.cs.dfs.clients.Client;
 import edu.usfca.cs.dfs.utils.Constants;
 
 public class Storage {
 
-    public static volatile boolean flag = false;
+    private static Map<String, String> argsMap = new HashMap<>();
+    private static String STORAGE_KEY = "-storagePath";
+    private static String CONTORLLER_HOSTNAME = "-controllerHostname";
+    private static String CONTROLLER_PORT = "-controllerPort";
 
     public static void main(String args[]) throws InterruptedException, IOException {
-    	StorageServer s = new StorageServer(7771);
-        Client controllerClient = new Client(Constants.CONTROLLER_HOSTNAME, Constants.CONTROLLER_PORT);
+    	for(int i=0; i<args.length; i+=2) {
+    		argsMap.put(args[i], args[i+1]);
+    	}
+    	if(argsMap.size() == 3 && argsMap.containsKey(STORAGE_KEY) && 
+    			argsMap.containsKey(CONTORLLER_HOSTNAME) && argsMap.containsKey(CONTROLLER_PORT)) {
+    		StorageHandlers.STORAGE_PATH = argsMap.get(STORAGE_KEY);
+    		startStorageServer(argsMap.get(CONTORLLER_HOSTNAME), Integer.parseInt(argsMap.get(CONTROLLER_PORT)));
+    	} 
+    	else {
+    		System.out.println("Failed to start server: Incomplete/Invalid arguments passed");
+    	}
+    }
+    
+    public static void startStorageServer(String controllerHost, int controllerPort) throws IOException {
+    	StorageServer s = new StorageServer(7774);
+        Client controllerClient = new Client(controllerHost, controllerPort);
         Messages.ProtoMessage msgWrapper = Messages.ProtoMessage
                 .newBuilder()
                 .setController(Messages.Controller
                         .newBuilder()
                         .setStorageNode(Messages.StorageNode
                                 .newBuilder()
-                                .setHost(Constants.STORAGE_HOSTNAME)
-                                .setPort(7771)
+                                .setHost(InetAddress.getLocalHost().getHostAddress())
+                                .setPort(7774)
                                 .build())
                         .build())
                 .build();
@@ -44,4 +64,5 @@ public class Storage {
         respThread.run();
         s.start();
     }
+    
 }

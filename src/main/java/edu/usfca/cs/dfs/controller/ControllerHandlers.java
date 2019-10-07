@@ -18,12 +18,14 @@ public class ControllerHandlers {
     private static ExecutorService threadPool = Executors.newFixedThreadPool(Constants.NUMBER_OF_THREADS);
     private static Map<Messages.StorageNode, BloomFilter> primaryBloomFilter = new HashMap<>();
     private static Map<Messages.StorageNode, BloomFilter> replicaBloomFilter = new HashMap<>();
+    
+    public static Config CONFIG;
 
     public static Messages.ProtoMessage register(Messages.StorageNode storageNode) {
         if(!nodeList.contains(storageNode)) {
             nodeList.add(storageNode);
-            primaryBloomFilter.put(storageNode, new BloomFilter(Constants.PRIMARY_K, Constants.PRIMARY_M));
-            replicaBloomFilter.put(storageNode, new BloomFilter(Constants.REPLICA_K, Constants.REPLICA_M));
+            primaryBloomFilter.put(storageNode, new BloomFilter(CONFIG.getPrimaryK(), CONFIG.getPrimaryM()));
+            replicaBloomFilter.put(storageNode, new BloomFilter(CONFIG.getReplicaK(), CONFIG.getReplicaM()));
             System.out.println("Added new storage node!");
         } else {
             System.out.println("Node already exist!");
@@ -50,7 +52,7 @@ public class ControllerHandlers {
         LinkedList<Messages.StorageNode> locations = new LinkedList<>();
         locations.add(primary);
         int i = (primaryIndex + 1) % nodeList.size();
-        while(i != primaryIndex && locations.size() < Constants.REPLICAS) {
+        while(i != primaryIndex && locations.size() < CONFIG.getReplicaCount()) {
         	if(hasStorageSpace(request.getSize(), nodeList.get(i))) {
         		Messages.StorageNode replica = nodeList.get(i);
         		locations.add(replica);
