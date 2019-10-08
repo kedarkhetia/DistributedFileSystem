@@ -58,7 +58,8 @@ message Storage {
     oneof msg {
         StoreChunk storeChunk = 1;
         StorageNodeResponse storeNodeResponse = 2;
-        UploadFile uploadFile = 4;
+        UploadFile uploadFile = 3;
+        StorageFeedback storageFeedback = 4;
     }
 }
 
@@ -84,7 +85,13 @@ message Client {
         StorageLocationResponse storageLocationResponse = 1;
         StoredLocationResponse storedLocationResponse = 2;
         DownloadFile downloadFile = 3;
+        StorageFeedback storageFeedback = 4;
     }
+}
+
+message StorageFeedback {
+	bool isStored = 1;
+	string filename = 2;
 }
 
 message DownloadFile {

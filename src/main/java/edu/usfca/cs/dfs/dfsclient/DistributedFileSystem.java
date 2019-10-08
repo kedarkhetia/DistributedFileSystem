@@ -5,15 +5,16 @@ import edu.usfca.cs.dfs.clients.StorageClientProxy;
 import edu.usfca.cs.dfs.messages.Messages;
 import edu.usfca.cs.dfs.utils.Constants;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
-import java.nio.charset.Charset;
+import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
+import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -35,66 +36,50 @@ public class DistributedFileSystem {
 
     public DistributedFileSystem() {}
 
-    public void put(String filename) throws IOException, InterruptedException, ExecutionException {
+    public boolean put(String filename) throws IOException, InterruptedException, ExecutionException {
+    	List<Future<Messages.StorageFeedback>> storageFeedbacks = new LinkedList<>();
     	Path path = Paths.get(filename);
-        try(BufferedReader in = Files.newBufferedReader(path, StandardCharsets.ISO_8859_1)) {
-            int readBytes;
-            byte[] data;
-            int count = (int) Files.size(path) / chunkSize;
-            int bufCount = 0;
-            int i = 0;
-            ControllerClientProxy controllerClient = new ControllerClientProxy();
-            for(i=0; i<count; i++) {
-                data = new byte[chunkSize];
-                bufCount = 0;
-                while(bufCount < data.length && (readBytes = in.read()) != -1) {
-                    data[bufCount] = (byte) readBytes;
-                    bufCount++;
-                }
-                String chunkedFileName = filename + CHUNK_SUFFIX + i;
-                controllerClient.getStorageLocations(chunkedFileName);
-                List<Messages.StorageNode> locations = getStorageNodes().get();
-                storeInStorage(chunkedFileName, i, ByteString.copyFrom(data), locations);
-            }
-            int restBuffer = (int) Files.size(path) - (chunkSize * count);
-            bufCount = 0;
-            data = new byte[restBuffer];
-            while(bufCount < restBuffer && (readBytes = in.read()) != -1) {
-                data[bufCount] = (byte) readBytes;
-                bufCount++;
-            }
-            if(bufCount != 0) {
-            	fileToChunkMap.put(filename, count+1);
-            } else {
-            	fileToChunkMap.put(filename, count);
-            }
-            String chunkedFileName = filename + "_chunk" + i;
-            controllerClient.getStorageLocations(chunkedFileName);
-            List<Messages.StorageNode> locations = getStorageNodes().get();
-            storeInStorage(chunkedFileName, i, ByteString.copyFrom(Arrays.copyOf(data, bufCount)), locations);
-            controllerClient.disconnect();
+    	int count = (int) Files.size(path) / chunkSize;
+        int i = 0;
+    	ControllerClientProxy controllerClient = new ControllerClientProxy();
+		@SuppressWarnings("resource")
+		RandomAccessFile aFile = new RandomAccessFile(filename, "r");
+    	FileChannel inChannel = aFile.getChannel();
+    	for(i=0; i<count; i++) {
+    		sendData(inChannel, filename, i, chunkSize, controllerClient, storageFeedbacks);
+    	}
+        int restBuffer =  (int) (Files.size(path) % chunkSize);
+        if(restBuffer != 0) {
+        	sendData(inChannel, filename, i, restBuffer, controllerClient, storageFeedbacks);
+        	fileToChunkMap.put(filename, count+1);
+        } else {
+        	fileToChunkMap.put(filename, count);
         }
-		
+        int c = 0;
+        for(Future<Messages.StorageFeedback> feedback : storageFeedbacks) {
+        	if(!feedback.get().getIsStored()) {
+        		controllerClient.disconnect();
+        		System.out.println(c);
+        		c++;
+        		return false;
+        	}
+        }
+        controllerClient.disconnect();
+        return true;
     }
     
-    private void storeInStorage(String filename, int id, ByteString data, List<Messages.StorageNode> locations) {
-		threadPool.execute(new Runnable() {
-			@Override
-			public void run() {
-				Messages.StorageNode location = locations.get(0);
-				StorageClientProxy storageClient = 
-						new StorageClientProxy(location.getHost(), location.getPort());
-				storageClient.upload(Messages.StoreChunk
-						.newBuilder()
-						.setFileName(filename)
-						.setChunkId(id)
-						.setData(data)
-						.addAllStorageLocations(locations)
-						.build());
-				storageClient.disconnect();
-			}
-		});
-	}
+    private void sendData(FileChannel inChannel, String filename, int i, int chunkSize, ControllerClientProxy client, List<Future<Messages.StorageFeedback>> storageFeedbacks) throws IOException, InterruptedException, ExecutionException {
+    	ByteBuffer buffer = ByteBuffer.allocate(chunkSize);
+		inChannel.read(buffer);
+		byte[] data = new byte[chunkSize];
+		buffer.flip();
+		buffer.get(data);
+		String chunkedFileName = filename + CHUNK_SUFFIX + i;
+		client.getStorageLocations(chunkedFileName);
+        List<Messages.StorageNode> locations = getStorageNodes().get();
+        storageFeedbacks.add(storeInStorage(chunkedFileName, i, ByteString.copyFrom(data), locations));
+		buffer.clear();
+    }
     
     private Future<List<Messages.StorageNode>> getStorageNodes() {
 		return threadPool.submit(() -> {
@@ -113,6 +98,33 @@ public class DistributedFileSystem {
         });
 	}
     
+    private Future<Messages.StorageFeedback> storeInStorage(String filename, int id, ByteString data, List<Messages.StorageNode> locations) {
+		return threadPool.submit(() -> {
+			Messages.StorageNode location = locations.get(0);
+			Messages.StoreChunk chunk = Messages.StoreChunk.newBuilder().setFileName(filename).setChunkId(id).setData(data).addAllStorageLocations(locations).build();
+			Messages.StorageFeedback feedback = getStorageFeedback(location, chunk).get();
+			System.out.println("File: " + filename + " isStored: " + feedback.getIsStored());
+			return feedback;
+		});
+	}
+    
+    private Future<Messages.StorageFeedback> getStorageFeedback(Messages.StorageNode location, Messages.StoreChunk chunk) {
+    	return threadPool.submit(() -> {
+    		StorageClientProxy storageClient = 
+					new StorageClientProxy(location.getHost(), location.getPort());
+			storageClient.upload(chunk);
+			synchronized(MessageDispatcher.storageFeedback) {
+				while(!MessageDispatcher.storageFeedback.containsKey(chunk.getFileName())) {
+					MessageDispatcher.storageFeedback.wait();
+				}
+				Messages.StorageFeedback feedback = MessageDispatcher.storageFeedback.remove(chunk.getFileName());
+				MessageDispatcher.storageFeedback.notifyAll();
+				storageClient.disconnect();
+				return feedback;
+			}
+		});
+	}
+    
     public void close() throws InterruptedException {
     	threadPool.shutdown();
     	while (!threadPool.awaitTermination(24, TimeUnit.HOURS)) {
@@ -129,25 +141,25 @@ public class DistributedFileSystem {
 			Files.createFile(path);
 		}
 		List<Future<Messages.DownloadFile>> writeTaskCallbacks = new LinkedList<>();
+		for(int i=0; i < chunkCount; i++) {
+    		String chunkName = filename + CHUNK_SUFFIX + i;
+    		List<Messages.StorageNode> locations = getStoredNodes(chunkName, i).get();
+    		writeTaskCallbacks.add(getDataFromLocations(locations, chunkName, i));	
+    	}
 		try(BufferedWriter writer = Files.newBufferedWriter(path, StandardCharsets.ISO_8859_1)) {
-			for(int i=0; i < chunkCount; i++) {
-	    		String chunkName = filename + CHUNK_SUFFIX + i;
-	    		List<Messages.StorageNode> locations = getStoredNodes(chunkName, i).get();
-	    		writeTaskCallbacks.add(getDataFromLocations(locations, chunkName, i, writer));	
-	    	}
 			for(Future<Messages.DownloadFile> callback : writeTaskCallbacks) {
 				Messages.DownloadFile downloadedChunk = callback.get();
 				if(downloadedChunk == null) {
 					return false;
 				}
-				String data = downloadedChunk.getStoreChunk().getData().toString(Charset.forName("ISO_8859_1"));
+				String data = downloadedChunk.getStoreChunk().getData().toString(StandardCharsets.ISO_8859_1);
 				writer.write(data, 0, data.length());
 			}
 		}
 		return true;
     }
     
-    private Future<Messages.DownloadFile> getDataFromLocations(List<Messages.StorageNode> locations, String chunkName, int chunkIndex, BufferedWriter writer) {
+    private Future<Messages.DownloadFile> getDataFromLocations(List<Messages.StorageNode> locations, String chunkName, int chunkIndex) {
     	return threadPool.submit(() -> {
     		for(int j=0; j<locations.size(); j++) { 
     			Messages.DownloadFile downloadedChunk = getStoredData(chunkName, locations.get(j)).get();

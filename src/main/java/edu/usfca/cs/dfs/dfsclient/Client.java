@@ -7,13 +7,19 @@ public class Client {
 
     public static void main(String args[]) throws IOException, InterruptedException, ExecutionException {
         DistributedFileSystem dfs = new DistributedFileSystem();
-        dfs.put("LinkStores.pdf");
-        boolean flag = dfs.get("./bigdata/retrived/","LinkStores.pdf");
+        boolean flag  = dfs.put("newFile.txt");
         if(flag) {
-        	System.out.println("Got data succeccfully");
+        	System.out.println("Send data succeccfully");
         }
         else {
-        	System.out.println("Retrive data failed");
+        	System.out.println("Send data failed");
+        }
+        flag = dfs.get("./bigdata/retrived/", "newFile.txt");
+        if(flag) {
+        	System.out.println("retrived data succeccfully");
+        }
+        else {
+        	System.out.println("retrived data failed");
         }
         dfs.close();
     }

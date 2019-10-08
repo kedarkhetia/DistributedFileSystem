@@ -12,36 +12,16 @@ import java.util.concurrent.Executors;
 
 public class ControllerHandlers {
 
-    private static List<Messages.StorageNode> nodeList = new LinkedList<>();
     private static Random random = new Random();
     private static ExecutorService threadPool = Executors.newFixedThreadPool(Constants.NUMBER_OF_THREADS);
-    private static Map<Messages.StorageNode, HeartbeatModel> heartbeatMap = new ConcurrentHashMap<>();
+    private static volatile Map<Messages.StorageNode, HeartbeatModel> heartbeatMap = new ConcurrentHashMap<>();
     
     public static Config CONFIG;
-
-    public static Messages.ProtoMessage register(Messages.StorageNode storageNode) {
-        if(!nodeList.contains(storageNode)) {
-            nodeList.add(storageNode);
-            HeartbeatModel heartbeat = new HeartbeatModel();
-            heartbeat.setReplica(new BloomFilter(CONFIG.getReplicaK(), CONFIG.getReplicaM()));
-            heartbeat.setPrimary(new BloomFilter(CONFIG.getPrimaryK(), CONFIG.getPrimaryM()));
-            heartbeatMap.put(storageNode, heartbeat);
-            System.out.println("Added new storage node! " + storageNode.getHost() + ":" + storageNode.getPort());
-        } else {
-            System.out.println("Node already exist!");
-        }
-        return Messages.ProtoMessage.newBuilder()
-                .setStorage(Messages.Storage.newBuilder()
-                        .setStoreNodeResponse(Messages.StorageNodeResponse
-                                .newBuilder().setFlag(true))
-                        .build())
-                .build();
-    }
     
-    // ToDo: deregister node when not able to connect.
 
     public static Messages.ProtoMessage getStorageLocations(Messages.StorageLocationRequest request) throws InterruptedException, ExecutionException {
         //System.out.println(nodeList);
+    	List<Messages.StorageNode> nodeList = new LinkedList<>(heartbeatMap.keySet());
     	int primaryIndex = random.nextInt(nodeList.size());
         Messages.StorageNode primary = nodeList.get(primaryIndex);
         while(!hasStorageSpace(request.getSize(), primary)) {
@@ -53,17 +33,15 @@ public class ControllerHandlers {
         locations.add(primary);
         int i = (primaryIndex + 1) % nodeList.size();
         while(i != primaryIndex && locations.size() < CONFIG.getReplicaCount()) {
-        	if(hasStorageSpace(request.getSize(), nodeList.get(i))) {
-        		Messages.StorageNode replica = nodeList.get(i);
+        	Messages.StorageNode replica = nodeList.get(i);
+        	if(hasStorageSpace(request.getSize(), replica)) {
         		locations.add(replica);
         	}
         	i = (i+1) % nodeList.size();
         }
     	locationBuilder.addAllLocations(locations);
-        Messages.Client clientMessage = Messages.Client.newBuilder()
-                .setStorageLocationResponse(locationBuilder.build()).build();
-        Messages.ProtoMessage msg = Messages.ProtoMessage.newBuilder().setClient(clientMessage).build();
-        return msg;
+        return Messages.ProtoMessage.newBuilder().setClient( Messages.Client.newBuilder()
+                .setStorageLocationResponse(locationBuilder.build()).build()).build();
     }
     
     private static boolean hasStorageSpace(long size, Messages.StorageNode storageNode) throws InterruptedException, ExecutionException {
@@ -72,21 +50,43 @@ public class ControllerHandlers {
     }
     
     public static void setHeartbeat(Messages.Heartbeat heartbeat) {
-    	System.out.println("Received Heartbeat From: " + heartbeat.getStorageNode().getHost() + ":" + heartbeat.getStorageNode().getPort());
+    	//System.out.println("Received Heartbeat From: " + heartbeat.getStorageNode().getHost() + ":" + heartbeat.getStorageNode().getPort());
+    	if(!heartbeatMap.containsKey(heartbeat.getStorageNode())) {
+			HeartbeatModel newHeartbeat = new HeartbeatModel();
+			newHeartbeat.setReplica(new BloomFilter(CONFIG.getReplicaK(), CONFIG.getReplicaM()));
+			newHeartbeat.setPrimary(new BloomFilter(CONFIG.getPrimaryK(), CONFIG.getPrimaryM()));
+			heartbeatMap.put(heartbeat.getStorageNode(), newHeartbeat);
+		}
 		HeartbeatModel heartbeatModel = heartbeatMap.get(heartbeat.getStorageNode());
 		heartbeatModel.setAvailableSpace(heartbeat.getAvailableSpace());
 		heartbeatModel.setProcessedRequests(heartbeat.getProcessedRequests());
 		heartbeatModel.setTimestamp(System.currentTimeMillis());
     }
     
-    public static void updateBloomFilter(Messages.StoreProof storeProof) {
-    	if(storeProof.getStorageType() == Messages.StoreProof.StorageType.PRIMARY) {
-    		heartbeatMap.get(storeProof.getNode()).getPrimary().put(storeProof.getFilename().getBytes());
-    		//System.out.println(storeProof.getNode().getHost() + storeProof.getNode().getPort() + " Primary: " + primaryBloomFilter);
-    	} else {
-    		heartbeatMap.get(storeProof.getNode()).getReplica().put(storeProof.getFilename().getBytes());
-    		//System.out.println(storeProof.getNode().getHost() + storeProof.getNode().getPort() + " Replica: " + replicaBloomFilter);
+    public static Messages.ProtoMessage updateBloomFilter(Messages.StoreProof storeProof) {
+    	HeartbeatModel heartbeat = heartbeatMap.get(storeProof.getNode());
+    	boolean respFlag;
+    	if(heartbeat == null) {
+    		respFlag = false;
+    	} 
+    	else {
+    		if(storeProof.getStorageType() == Messages.StoreProof.StorageType.PRIMARY) {
+        		heartbeat.getPrimary().put(storeProof.getFilename().getBytes());
+        		System.out.println(storeProof.getNode().getHost() + storeProof.getNode().getPort() + " Primary: " + heartbeat.getPrimary());
+        	} else {
+        		heartbeat.getReplica().put(storeProof.getFilename().getBytes());
+        		System.out.println(storeProof.getNode().getHost() + storeProof.getNode().getPort() + " Replica: " + heartbeat.getReplica());
+        	}
+    		respFlag = true;
     	}
+    	return Messages.ProtoMessage.newBuilder()
+    			.setStorage(Messages.Storage.newBuilder()
+    					.setStorageFeedback(Messages.StorageFeedback.newBuilder()
+    							.setIsStored(respFlag)
+    							.setFilename(storeProof.getFilename())
+    							.build())
+    					.build())
+    			.build();
     }
     
     public static Messages.ProtoMessage getStoredLocations(Messages.StoredLocationRequest storedLocationRequest) {

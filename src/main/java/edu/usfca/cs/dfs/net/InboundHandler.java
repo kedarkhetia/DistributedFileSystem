@@ -21,7 +21,7 @@ extends SimpleChannelInboundHandler<Messages.ProtoMessage> {
         /* A connection has been established */
         InetSocketAddress addr
             = (InetSocketAddress) ctx.channel().remoteAddress();
-        System.out.println("Connection established: " + addr);
+        //System.out.println("Connection established: " + addr);
     }
 
     @Override
@@ -29,7 +29,7 @@ extends SimpleChannelInboundHandler<Messages.ProtoMessage> {
         /* A channel has been disconnected */
         InetSocketAddress addr
             = (InetSocketAddress) ctx.channel().remoteAddress();
-        System.out.println("Connection lost: " + addr);
+        //System.out.println("Connection lost: " + addr);
     }
 
     @Override
