@@ -97,7 +97,7 @@ public class DistributedFileSystem {
 			Messages.StorageNode location = locations.get(0);
 			Messages.StoreChunk chunk = Messages.StoreChunk.newBuilder().setFileName(filename).setChunkId(id).setData(data).addAllStorageLocations(locations).build();
 			Messages.StorageFeedback feedback = getStorageFeedback(location, chunk).get();
-			System.out.println("File: " + filename + " isStored: " + feedback.getIsStored());
+			//System.out.println("File: " + filename + " isStored: " + feedback.getIsStored());
 			return feedback;
 		});
 	}
@@ -127,6 +127,9 @@ public class DistributedFileSystem {
     }
     
     public boolean get(String storagePath, String filename) throws InterruptedException, ExecutionException, IOException {
+    	if(!fileToChunkMap.containsKey(filename)) {
+    		return false;
+    	}
     	int chunkCount = fileToChunkMap.get(filename);
     	Path path = Paths.get(storagePath+filename);
 		if(!Files.exists(path)) {

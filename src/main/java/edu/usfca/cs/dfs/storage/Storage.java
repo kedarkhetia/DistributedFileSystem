@@ -30,7 +30,7 @@ public class Storage {
     }
     
     public static void startStorageServer(String controllerHost, int controllerPort) throws IOException, InterruptedException {
-    	int port = 7770;
+    	int port = 7774;
     	StorageServer s = new StorageServer(port);
     	StorageHandlers.startHeartbeat(InetAddress.getLocalHost().getHostAddress(), port);
         s.start();
