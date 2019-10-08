@@ -1,15 +1,10 @@
 package edu.usfca.cs.dfs.storage;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.FileStore;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -21,13 +16,12 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import com.github.luben.zstd.Zstd;
 import com.google.protobuf.ByteString;
 
 import edu.usfca.cs.dfs.clients.ControllerClientProxy;
 import edu.usfca.cs.dfs.clients.StorageClientProxy;
 import edu.usfca.cs.dfs.messages.Messages;
-import edu.usfca.cs.dfs.messages.Messages.Controller;
-import edu.usfca.cs.dfs.messages.Messages.StorageFeedback.Builder;
 import edu.usfca.cs.dfs.utils.Constants;
 
 public class StorageHandlers {
@@ -48,13 +42,19 @@ public class StorageHandlers {
 			pathString += Constants.REPLICA_PATH;
 			storageType = Messages.StoreProof.StorageType.REPLICA;
 		}
+		boolean compressFlag = canCompress(chunk.getData().toByteArray());
+		byte[] data = chunk.getData().toByteArray();
+		if(compressFlag) {
+			pathString += Constants.COMPRESSED_PATH;
+			data = compress(chunk.getData().toByteArray());
+			//data = chunk.getData().toByteArray();
+		}
 		locations = new LinkedList<>(locations);
 		Path path = Paths.get(pathString+chunk.getFileName());
 		if(!Files.exists(path)) {
 			Files.createDirectories(path.getParent());
 			Files.createFile(path);
 		}
-		byte[] data = chunk.getData().toByteArray();
 		Files.write(path, data, StandardOpenOption.CREATE);
 		Messages.ProtoMessage msg = null;
 		if(locations.size() == Constants.REPLICAS) {
@@ -79,6 +79,37 @@ public class StorageHandlers {
 		return msg;
 		
 	}
+	
+	private static byte[] compress(byte[] data) {
+		return Zstd.compress(data, Constants.COMPRESS_LEVEL);
+	}
+	
+	private static byte[] decompress(byte[] data) {
+		long decompressedSize = Zstd.decompressedSize(data);
+		return Zstd.decompress(data, (int) decompressedSize);
+	}
+	
+	private static boolean canCompress(byte[] input) {
+        if (input.length == 0) {
+            return false;
+        }
+        /* Total up the occurrences of each byte */
+        int[] charCounts = new int[256];
+        for (byte b : input) {
+            charCounts[b & 0xFF]++;
+        }
+        double entropy = 0.0;
+        for (int i = 0; i < 256; ++i) {
+            if (charCounts[i] == 0.0) {
+                continue;
+            }
+
+            double freq = (double) charCounts[i] / input.length;
+            entropy -= freq * (Math.log(freq) / Math.log(2));
+        }
+        // Calculate compression
+        return (1d - (entropy / 8)) > 0.6d;
+    }
 	
 	private static Future<Messages.StorageFeedback> getStorageFeedback(Messages.StoreChunk chunk
 			, Messages.StorageNode location, Messages.StoreProof.StorageType storageType) {
@@ -121,26 +152,45 @@ public class StorageHandlers {
 	}
 	
 	public static Messages.ProtoMessage retrive(Messages.UploadFile uploadFile) throws IOException {
-		System.out.println("Received Retrive request for, " + uploadFile.getFilename());
 		String filePath = STORAGE_PATH + uploadFile.getStorageNode().getHost()
 				+ uploadFile.getStorageNode().getPort() + "/";
 		File file = new File(filePath + uploadFile.getFilename());
+		String finalPath = filePath + uploadFile.getFilename();
 		if(!file.exists()) {
-			file = new File(filePath + Constants.REPLICA_PATH + uploadFile.getFilename());
-			if(!file.exists()) {
-				return fileNotFound(uploadFile);
-			} else {
-				filePath += Constants.REPLICA_PATH;
+			File isReplica = new File(filePath + Constants.REPLICA_PATH + uploadFile.getFilename());
+			File isCompressed = new File(filePath + Constants.COMPRESSED_PATH + uploadFile.getFilename());
+			if(!isReplica.exists()) {
+				File isCompressedReplica = new File(filePath + Constants.REPLICA_PATH +
+						Constants.COMPRESSED_PATH + uploadFile.getFilename());
+				if(isCompressedReplica.exists()) {
+					file = isCompressedReplica;
+					finalPath = filePath + Constants.REPLICA_PATH +
+							Constants.COMPRESSED_PATH + uploadFile.getFilename();
+				}
+			} 
+			else {
+				file = isReplica;
+				finalPath = filePath + Constants.REPLICA_PATH + uploadFile.getFilename();
+			}
+			if(isCompressed.exists()) {
+				file = isCompressed;
+				finalPath = filePath + Constants.COMPRESSED_PATH + uploadFile.getFilename();
+			}
+			else {
+				fileNotFound(uploadFile);
 			}
 		}
-		Path path = Paths.get(filePath + uploadFile.getFilename());
+		Path path = Paths.get(finalPath);
 		byte[] data = new byte[(int) Files.size(path)];
-		RandomAccessFile aFile = new RandomAccessFile(filePath + uploadFile.getFilename(), "r");
+		RandomAccessFile aFile = new RandomAccessFile(finalPath, "r");
     	FileChannel inChannel = aFile.getChannel();
     	ByteBuffer buffer = ByteBuffer.allocate((int) Files.size(path));
 		inChannel.read(buffer);
 		buffer.flip();
 		buffer.get(data);
+		if(finalPath.endsWith(Constants.COMPRESSED_PATH + uploadFile.getFilename())) {
+			data = decompress(data);
+		}
 		processedRequest++;
 		aFile.close();
 		return sendFile(data, uploadFile);

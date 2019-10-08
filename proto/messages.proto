@@ -19,6 +19,7 @@ message Controller {
         Heartbeat heartbeat = 3;
         StoreProof storeProof = 4;
         StoredLocationRequest storedLocationRequest = 5;
+        ControllerEmptyMessage contorllerEmptyMessage = 6;
     }
 }
 
@@ -50,6 +51,15 @@ message StoreProof {
 	enum StorageType {
 		PRIMARY = 0;
 		REPLICA = 1;
+	}
+}
+
+message ControllerEmptyMessage {
+	RequestType requestType = 1;
+	enum RequestType {
+		ACTIVE_NODES = 0;
+		TOTAL_DISKSPACE = 1;
+		REQUESTS_SERVED = 2;
 	}
 }
 
@@ -86,6 +96,9 @@ message Client {
         StoredLocationResponse storedLocationResponse = 2;
         DownloadFile downloadFile = 3;
         StorageFeedback storageFeedback = 4;
+        ActiveNodes activeNodes = 5;
+        TotalDiskSpace totalDiskSpace = 6;
+        RequestsServed requestServed = 7;
     }
 }
 
@@ -107,5 +120,23 @@ message StoredLocationResponse {
 	repeated StorageNode locations = 1;
 	string filename = 2;
 }
+
+message ActiveNodes {
+	repeated StorageNode activeNodes = 1;
+}
+
+message TotalDiskSpace {
+	int64 diskSpace = 1;
+}
+
+message RequestPerNode {
+	StorageNode node = 1;
+	int64 requests = 2;
+}
+
+message RequestsServed {
+	repeated RequestPerNode requestsPerNode = 1;
+}
+
 
 

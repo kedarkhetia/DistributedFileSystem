@@ -55,6 +55,36 @@ public class ControllerClientProxy {
     			.build());
     }
     
+    public void getActiveNodes() {
+    	client.sendMessage(Messages.ProtoMessage.newBuilder()
+    			.setController(Messages.Controller.newBuilder()
+    					.setContorllerEmptyMessage(Messages.ControllerEmptyMessage.newBuilder()
+    							.setRequestType(Messages.ControllerEmptyMessage.RequestType.ACTIVE_NODES)
+    							.build())
+    					.build())
+    			.build());
+    }
+    
+    public void getTotalDiskspace() {
+    	client.sendMessage(Messages.ProtoMessage.newBuilder()
+    			.setController(Messages.Controller.newBuilder()
+    					.setContorllerEmptyMessage(Messages.ControllerEmptyMessage.newBuilder()
+    							.setRequestType(Messages.ControllerEmptyMessage.RequestType.TOTAL_DISKSPACE)
+    							.build())
+    					.build())
+    			.build());
+    }
+    
+    public void getProcessedRequest() {
+    	client.sendMessage(Messages.ProtoMessage.newBuilder()
+    			.setController(Messages.Controller.newBuilder()
+    					.setContorllerEmptyMessage(Messages.ControllerEmptyMessage.newBuilder()
+    							.setRequestType(Messages.ControllerEmptyMessage.RequestType.REQUESTS_SERVED)
+    							.build())
+    					.build())
+    			.build());
+    }
+    
     public void disconnect() {
     	client.disconnect();
     }

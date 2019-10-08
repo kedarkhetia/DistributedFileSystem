@@ -20,6 +20,9 @@ public class MessageDispatcher {
         else if (message.hasStoredLocationRequest()) {
         	return ControllerHandlers.getStoredLocations(message.getStoredLocationRequest());
         }
+        else if (message.hasContorllerEmptyMessage()) {
+        	return ControllerHandlers.getMetaInfo(message.getContorllerEmptyMessage());
+        }
         return null;
     }
 

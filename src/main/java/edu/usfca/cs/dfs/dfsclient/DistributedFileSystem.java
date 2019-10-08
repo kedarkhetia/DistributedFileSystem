@@ -3,6 +3,7 @@ package edu.usfca.cs.dfs.dfsclient;
 import edu.usfca.cs.dfs.clients.ControllerClientProxy;
 import edu.usfca.cs.dfs.clients.StorageClientProxy;
 import edu.usfca.cs.dfs.messages.Messages;
+import edu.usfca.cs.dfs.messages.Messages.StorageNode;
 import edu.usfca.cs.dfs.utils.Constants;
 
 import java.io.BufferedWriter;
@@ -14,7 +15,6 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,6 +24,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.protobuf.ByteString;
 
@@ -55,12 +56,9 @@ public class DistributedFileSystem {
         } else {
         	fileToChunkMap.put(filename, count);
         }
-        int c = 0;
         for(Future<Messages.StorageFeedback> feedback : storageFeedbacks) {
         	if(!feedback.get().getIsStored()) {
         		controllerClient.disconnect();
-        		System.out.println(c);
-        		c++;
         		return false;
         	}
         }
@@ -85,13 +83,9 @@ public class DistributedFileSystem {
 		return threadPool.submit(() -> {
 			synchronized(MessageDispatcher.locations) {
 				if(MessageDispatcher.locations.isEmpty()) {
-					try {
-						MessageDispatcher.locations.wait();
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
+					MessageDispatcher.locations.wait();
 				}
-				LinkedList<Messages.StorageNode> copy = new LinkedList<>(MessageDispatcher.locations);
+				List<Messages.StorageNode> copy = MessageDispatcher.locations;
 				MessageDispatcher.locations = new LinkedList<Messages.StorageNode>();
 				return copy;
 			}
@@ -110,8 +104,7 @@ public class DistributedFileSystem {
     
     private Future<Messages.StorageFeedback> getStorageFeedback(Messages.StorageNode location, Messages.StoreChunk chunk) {
     	return threadPool.submit(() -> {
-    		StorageClientProxy storageClient = 
-					new StorageClientProxy(location.getHost(), location.getPort());
+    		StorageClientProxy storageClient = new StorageClientProxy(location.getHost(), location.getPort());
 			storageClient.upload(chunk);
 			synchronized(MessageDispatcher.storageFeedback) {
 				while(!MessageDispatcher.storageFeedback.containsKey(chunk.getFileName())) {
@@ -180,11 +173,7 @@ public class DistributedFileSystem {
 					.setStorageNode(node).build());
     		synchronized(MessageDispatcher.chunkToData) {
 				while(!MessageDispatcher.chunkToData.containsKey(chunkName)) {
-					try {
-						MessageDispatcher.chunkToData.wait();
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
+					MessageDispatcher.chunkToData.wait();
 				}
 				Messages.DownloadFile data = MessageDispatcher.chunkToData.remove(chunkName);
 				storageClientProxy.disconnect();
@@ -200,11 +189,7 @@ public class DistributedFileSystem {
     		controllerClientProxy.getStoredLocations(chunkName, chunkId);
     		synchronized(MessageDispatcher.chunkToLocation) {
 				while(!MessageDispatcher.chunkToLocation.containsKey(chunkName)) {
-					try {
-						MessageDispatcher.chunkToLocation.wait();
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					}
+					MessageDispatcher.chunkToLocation.wait();
 				}
 				List<Messages.StorageNode> copy = (List<Messages.StorageNode>)
 						MessageDispatcher.chunkToLocation.remove(chunkName);
@@ -215,4 +200,59 @@ public class DistributedFileSystem {
     	});
     }
     
+    public List<Messages.StorageNode> getActiveNodes() throws InterruptedException, ExecutionException {
+    	ControllerClientProxy clientControllerProxy = new ControllerClientProxy();
+    	clientControllerProxy.getActiveNodes();
+    	Future<List<Messages.StorageNode>> storageNodeList = threadPool.submit(() -> {
+    		synchronized(MessageDispatcher.activeNodes) {
+    			if(MessageDispatcher.activeNodes.isEmpty()) {
+    				MessageDispatcher.activeNodes.wait();
+        		}
+    			List<StorageNode> activeNodes = MessageDispatcher.activeNodes;
+    			MessageDispatcher.activeNodes = new LinkedList<>();
+    			clientControllerProxy.disconnect();
+    			return activeNodes;
+    		}
+    	});
+    	return storageNodeList.get();
+    }
+    
+    public long getTotalDiskspace() throws InterruptedException, ExecutionException {
+    	ControllerClientProxy clientControllerProxy = new ControllerClientProxy();
+    	clientControllerProxy.getTotalDiskspace();
+    	Future<Long> totalDiskspace = threadPool.submit(() -> {
+    		synchronized(MessageDispatcher.totalDiskspace) {
+    			if(MessageDispatcher.totalDiskspace.get() == -1) {
+    				MessageDispatcher.totalDiskspace.wait();
+        		}
+    			Long activeNodes = MessageDispatcher.totalDiskspace.get();
+    			MessageDispatcher.totalDiskspace.set(-1);
+    			clientControllerProxy.disconnect();
+    			return activeNodes;
+    		}
+    	});
+    	return totalDiskspace.get();
+    }
+    
+    public Map<Messages.StorageNode, Long> getRequestsServed() throws InterruptedException, ExecutionException {
+    	ControllerClientProxy clientControllerProxy = new ControllerClientProxy();
+    	clientControllerProxy.getProcessedRequest();
+    	Future<List<Messages.RequestPerNode>> totalRequestServed = threadPool.submit(() -> {
+    		synchronized(MessageDispatcher.requestsServed) {
+    			if(MessageDispatcher.requestsServed.isEmpty()) {
+    				MessageDispatcher.requestsServed.wait();
+        		}
+    			List<Messages.RequestPerNode> requestsServed = MessageDispatcher.requestsServed;
+    			MessageDispatcher.requestsServed = new LinkedList<>();
+    			clientControllerProxy.disconnect();
+    			return requestsServed;
+    		}
+    	});
+    	List<Messages.RequestPerNode> requestsPerNode = totalRequestServed.get();
+    	Map<Messages.StorageNode, Long> requestServedPerNode = new HashMap<>();
+    	for(Messages.RequestPerNode requestPerNode : requestsPerNode) {
+    		requestServedPerNode.put(requestPerNode.getNode(), requestPerNode.getRequests());
+    	}
+    	return requestServedPerNode;
+    }
 }

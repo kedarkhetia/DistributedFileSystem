@@ -1,6 +1,9 @@
 package edu.usfca.cs.dfs.controller;
 
 import edu.usfca.cs.dfs.messages.Messages;
+import edu.usfca.cs.dfs.messages.Messages.ActiveNodes.Builder;
+import edu.usfca.cs.dfs.messages.Messages.ControllerEmptyMessage;
+import edu.usfca.cs.dfs.messages.Messages.ProtoMessage;
 import edu.usfca.cs.dfs.utils.BloomFilter;
 import edu.usfca.cs.dfs.utils.Constants;
 
@@ -72,10 +75,10 @@ public class ControllerHandlers {
     	else {
     		if(storeProof.getStorageType() == Messages.StoreProof.StorageType.PRIMARY) {
         		heartbeat.getPrimary().put(storeProof.getFilename().getBytes());
-        		System.out.println(storeProof.getNode().getHost() + storeProof.getNode().getPort() + " Primary: " + heartbeat.getPrimary());
+        		//System.out.println(storeProof.getNode().getHost() + storeProof.getNode().getPort() + " Primary: " + heartbeat.getPrimary());
         	} else {
         		heartbeat.getReplica().put(storeProof.getFilename().getBytes());
-        		System.out.println(storeProof.getNode().getHost() + storeProof.getNode().getPort() + " Replica: " + heartbeat.getReplica());
+        		//System.out.println(storeProof.getNode().getHost() + storeProof.getNode().getPort() + " Replica: " + heartbeat.getReplica());
         	}
     		respFlag = true;
     	}
@@ -124,7 +127,7 @@ public class ControllerHandlers {
         			}
         			for(Messages.StorageNode node : removeNodes) {
         				heartbeatMap.remove(node);
-        				System.out.println("Heartbeat not received, Removing node: " + node);
+        				//System.out.println("Heartbeat not received, Removing node: " + node);
         			}
         			try {
 						Thread.sleep(1000); // check every second
@@ -135,4 +138,58 @@ public class ControllerHandlers {
     		}
      	});
     }
+
+	public static Messages.ProtoMessage getMetaInfo(ControllerEmptyMessage contorllerEmptyMessage) {
+		if(contorllerEmptyMessage.getRequestType() == Messages.ControllerEmptyMessage.RequestType.ACTIVE_NODES) {
+			return getActiveNodes();		
+		}
+		else if(contorllerEmptyMessage.getRequestType() == Messages.ControllerEmptyMessage.RequestType.TOTAL_DISKSPACE) {
+			return getTotalDiskSpace();
+		}
+		else if(contorllerEmptyMessage.getRequestType() == Messages.ControllerEmptyMessage.RequestType.REQUESTS_SERVED) {
+			return getRequestsServed();	
+		}
+		return null;
+	}
+	
+	public static Messages.ProtoMessage getActiveNodes() {
+		return Messages.ProtoMessage.newBuilder()
+				.setClient(Messages.Client.newBuilder()
+						.setActiveNodes(Messages.ActiveNodes.newBuilder()
+								.addAllActiveNodes(new LinkedList<Messages.StorageNode>(heartbeatMap.keySet()))
+								.build())
+						.build())
+				.build();
+	}
+	
+	public static Messages.ProtoMessage getTotalDiskSpace() {
+		long totalDiskSpace = 0;
+		for(Messages.StorageNode storageNode : heartbeatMap.keySet()) {
+			totalDiskSpace += heartbeatMap.get(storageNode).getAvailableSpace();
+		}
+		return Messages.ProtoMessage.newBuilder()
+				.setClient(Messages.Client.newBuilder()
+						.setTotalDiskSpace(Messages.TotalDiskSpace.newBuilder()
+								.setDiskSpace(totalDiskSpace)
+								.build())
+						.build())
+				.build();
+	}
+	
+	public static Messages.ProtoMessage getRequestsServed() {
+		List<Messages.RequestPerNode> requestsPerNode = new LinkedList<>();
+		for(Messages.StorageNode storageNode : heartbeatMap.keySet()) {
+			requestsPerNode.add(Messages.RequestPerNode.newBuilder()
+					.setNode(storageNode)
+					.setRequests(heartbeatMap.get(storageNode).getProcessedRequests())
+					.build());
+		}
+		return Messages.ProtoMessage.newBuilder()
+				.setClient(Messages.Client.newBuilder()
+						.setRequestServed(Messages.RequestsServed.newBuilder()
+								.addAllRequestsPerNode(requestsPerNode)
+								.build())
+						.build())
+				.build();
+	}
 }
