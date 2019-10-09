@@ -14,7 +14,7 @@ import edu.usfca.cs.dfs.messages.Messages.StorageFeedback.Builder;
 public class MessageDispatcher {
 	
 	public static volatile List<Messages.StorageNode> locations = new LinkedList<>();
-	public static volatile Map<String, List<Messages.StorageNode>> chunkToLocation = new HashMap<>();
+	public static volatile Map<String, List<Messages.StoredLocationType>> chunkToLocation = new HashMap<>();
 	public static volatile Map<String, Messages.DownloadFile> chunkToData = new HashMap<>();
 	public static volatile Map<String, Messages.StorageFeedback> storageFeedback = new HashMap<>();
 	public static volatile List<Messages.StorageNode> activeNodes = new LinkedList<>();
@@ -32,7 +32,7 @@ public class MessageDispatcher {
         else if (message.hasStoredLocationResponse()) {
         	synchronized(chunkToLocation) {
         		chunkToLocation.put(message.getStoredLocationResponse().getFilename(),
-        				message.getStoredLocationResponse().getLocationsList());
+        				message.getStoredLocationResponse().getStoredLocationTypeList());
         		chunkToLocation.notifyAll();
         	}
         }

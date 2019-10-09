@@ -19,7 +19,7 @@ public class ControllerClientProxy {
                 .build());
     }
     
-    public void sendStorageProof(String filename, Messages.StoreProof.StorageType storageType, 
+    public void sendStorageProof(String filename, Messages.StorageType storageType, 
     		Messages.StorageNode node) {
     	client.sendMessage(Messages.ProtoMessage.newBuilder()
                 .setController(Messages.Controller.newBuilder()

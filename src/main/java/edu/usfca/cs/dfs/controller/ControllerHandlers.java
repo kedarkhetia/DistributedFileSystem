@@ -1,9 +1,7 @@
 package edu.usfca.cs.dfs.controller;
 
 import edu.usfca.cs.dfs.messages.Messages;
-import edu.usfca.cs.dfs.messages.Messages.ActiveNodes.Builder;
 import edu.usfca.cs.dfs.messages.Messages.ControllerEmptyMessage;
-import edu.usfca.cs.dfs.messages.Messages.ProtoMessage;
 import edu.usfca.cs.dfs.utils.BloomFilter;
 import edu.usfca.cs.dfs.utils.Constants;
 
@@ -22,7 +20,7 @@ public class ControllerHandlers {
     public static Config CONFIG;
     
 
-    public static Messages.ProtoMessage getStorageLocations(Messages.StorageLocationRequest request) throws InterruptedException, ExecutionException {
+    public static synchronized Messages.ProtoMessage getStorageLocations(Messages.StorageLocationRequest request) throws InterruptedException, ExecutionException {
         //System.out.println(nodeList);
     	List<Messages.StorageNode> nodeList = new LinkedList<>(heartbeatMap.keySet());
     	int primaryIndex = random.nextInt(nodeList.size());
@@ -47,12 +45,12 @@ public class ControllerHandlers {
                 .setStorageLocationResponse(locationBuilder.build()).build()).build();
     }
     
-    private static boolean hasStorageSpace(long size, Messages.StorageNode storageNode) throws InterruptedException, ExecutionException {
+    private static synchronized boolean hasStorageSpace(long size, Messages.StorageNode storageNode) throws InterruptedException, ExecutionException {
     	HeartbeatModel heartbeat = heartbeatMap.get(storageNode);
     	return size < heartbeat.getAvailableSpace();
     }
     
-    public static void setHeartbeat(Messages.Heartbeat heartbeat) {
+    public static synchronized void setHeartbeat(Messages.Heartbeat heartbeat) {
     	//System.out.println("Received Heartbeat From: " + heartbeat.getStorageNode().getHost() + ":" + heartbeat.getStorageNode().getPort());
     	if(!heartbeatMap.containsKey(heartbeat.getStorageNode())) {
 			HeartbeatModel newHeartbeat = new HeartbeatModel();
@@ -66,53 +64,54 @@ public class ControllerHandlers {
 		heartbeatModel.setTimestamp(System.currentTimeMillis());
     }
     
-    public static Messages.ProtoMessage updateBloomFilter(Messages.StoreProof storeProof) {
+    public static synchronized Messages.ProtoMessage updateBloomFilter(Messages.StoreProof storeProof) {
     	HeartbeatModel heartbeat = heartbeatMap.get(storeProof.getNode());
-    	boolean respFlag;
-    	if(heartbeat == null) {
-    		respFlag = false;
-    	} 
-    	else {
-    		if(storeProof.getStorageType() == Messages.StoreProof.StorageType.PRIMARY) {
-        		heartbeat.getPrimary().put(storeProof.getFilename().getBytes());
-        		//System.out.println(storeProof.getNode().getHost() + storeProof.getNode().getPort() + " Primary: " + heartbeat.getPrimary());
-        	} else {
-        		heartbeat.getReplica().put(storeProof.getFilename().getBytes());
-        		//System.out.println(storeProof.getNode().getHost() + storeProof.getNode().getPort() + " Replica: " + heartbeat.getReplica());
-        	}
-    		respFlag = true;
+    	if(storeProof.getStorageType() == Messages.StorageType.PRIMARY) {
+    		heartbeat.getPrimary().put(storeProof.getFilename().getBytes());
+    		//System.out.println(storeProof.getNode().getHost() + storeProof.getNode().getPort() + " Primary: " + heartbeat.getPrimary());
+    	} else {
+    		heartbeat.getReplica().put(storeProof.getFilename().getBytes());
+    		//System.out.println(storeProof.getNode().getHost() + storeProof.getNode().getPort() + " Replica: " + heartbeat.getReplica());
     	}
     	return Messages.ProtoMessage.newBuilder()
     			.setStorage(Messages.Storage.newBuilder()
     					.setStorageFeedback(Messages.StorageFeedback.newBuilder()
-    							.setIsStored(respFlag)
+    							.setIsStored(true)
     							.setFilename(storeProof.getFilename())
     							.build())
     					.build())
     			.build();
     }
     
-    public static Messages.ProtoMessage getStoredLocations(Messages.StoredLocationRequest storedLocationRequest) {
+    public static synchronized Messages.ProtoMessage getStoredLocations(Messages.StoredLocationRequest storedLocationRequest) {
     	String filename = storedLocationRequest.getFilename();
-    	List<Messages.StorageNode> locations = new LinkedList<>();
+    	List<Messages.StoredLocationType> storageLocationTypes = new LinkedList<>();
     	for(Messages.StorageNode node : heartbeatMap.keySet()) {
     		if(heartbeatMap.get(node).getPrimary().get(filename.getBytes())) {
-    			locations.add(node);
+    			storageLocationTypes.add(Messages.StoredLocationType.newBuilder()
+    					.setLocation(node)
+    					.setStorageType(Messages.StorageType.PRIMARY)
+    					.build());
     		}
-    		else if(heartbeatMap.get(node).getReplica().get(filename.getBytes())) {
-    			locations.add(node);
+    		if(heartbeatMap.get(node).getReplica().get(filename.getBytes())) {
+    			storageLocationTypes.add(Messages.StoredLocationType.newBuilder()
+    					.setLocation(node)
+    					.setStorageType(Messages.StorageType.REPLICA)
+    					.build());
     		}
     	}
     	Messages.StoredLocationResponse.Builder locationBuilder = Messages.StoredLocationResponse.newBuilder();
-    	locationBuilder.addAllLocations(locations);
+    	locationBuilder.addAllStoredLocationType(storageLocationTypes);
     	locationBuilder.setFilename(storedLocationRequest.getFilename());
+    	System.out.println("---------------------");
+    	System.out.println(locationBuilder.build());
     	return Messages.ProtoMessage.newBuilder()
     			.setClient(Messages.Client.newBuilder()
     					.setStoredLocationResponse(locationBuilder.build()))
     			.build();
     }
     
-    public static void monitorHeartBeats() {
+    public static synchronized void monitorHeartBeats() {
     	threadPool.execute(new Runnable() {
     		@Override
     		public void run() {
@@ -139,7 +138,7 @@ public class ControllerHandlers {
      	});
     }
 
-	public static Messages.ProtoMessage getMetaInfo(ControllerEmptyMessage contorllerEmptyMessage) {
+	public static synchronized Messages.ProtoMessage getMetaInfo(ControllerEmptyMessage contorllerEmptyMessage) {
 		if(contorllerEmptyMessage.getRequestType() == Messages.ControllerEmptyMessage.RequestType.ACTIVE_NODES) {
 			return getActiveNodes();		
 		}
@@ -152,7 +151,7 @@ public class ControllerHandlers {
 		return null;
 	}
 	
-	public static Messages.ProtoMessage getActiveNodes() {
+	public static synchronized Messages.ProtoMessage getActiveNodes() {
 		return Messages.ProtoMessage.newBuilder()
 				.setClient(Messages.Client.newBuilder()
 						.setActiveNodes(Messages.ActiveNodes.newBuilder()
@@ -162,7 +161,7 @@ public class ControllerHandlers {
 				.build();
 	}
 	
-	public static Messages.ProtoMessage getTotalDiskSpace() {
+	public static synchronized Messages.ProtoMessage getTotalDiskSpace() {
 		long totalDiskSpace = 0;
 		for(Messages.StorageNode storageNode : heartbeatMap.keySet()) {
 			totalDiskSpace += heartbeatMap.get(storageNode).getAvailableSpace();
@@ -176,7 +175,7 @@ public class ControllerHandlers {
 				.build();
 	}
 	
-	public static Messages.ProtoMessage getRequestsServed() {
+	public static synchronized Messages.ProtoMessage getRequestsServed() {
 		List<Messages.RequestPerNode> requestsPerNode = new LinkedList<>();
 		for(Messages.StorageNode storageNode : heartbeatMap.keySet()) {
 			requestsPerNode.add(Messages.RequestPerNode.newBuilder()

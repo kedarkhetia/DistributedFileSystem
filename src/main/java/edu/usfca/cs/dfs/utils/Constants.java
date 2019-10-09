@@ -4,7 +4,7 @@ public class Constants {
 	
 	// Storage Server constants
     public static String REPLICA_PATH = "replica/";
-    public static String COMPRESSED_PATH = "compressed/";
+    public static String COMPRESSED_PATH = "compressed";
     public static int COMPRESS_LEVEL = 3;
 
     // Controller Server

@@ -11,6 +11,11 @@ message ProtoMessage {
     }
 }
 
+enum StorageType {
+	PRIMARY = 0;
+	REPLICA = 1;
+}
+
 // Controller Messages
 message Controller {
     oneof msg {
@@ -48,10 +53,6 @@ message StoreProof {
 	string filename = 1;
 	StorageNode node = 2;
 	StorageType storageType = 3;
-	enum StorageType {
-		PRIMARY = 0;
-		REPLICA = 1;
-	}
 }
 
 message ControllerEmptyMessage {
@@ -77,16 +78,24 @@ message StorageNodeResponse {
     bool flag = 1;
 }
 
+message Data {
+	bytes data = 1;
+	int32 chunks = 2;
+}
+
 message StoreChunk {
-    string fileName = 1;
-    int32 chunkId = 2;
-    bytes data = 3;
-    repeated StorageNode storageLocations = 4;
+	string fileName = 1;
+	int32 chunkId = 2;
+	Data data = 3;
+	StorageNode primary = 4;
+	repeated StorageNode replicas = 5;
+	StorageType storageType = 6;
 }
 
 message UploadFile {
 	string filename = 1;
 	StorageNode storageNode = 2;
+	StorageType storageType = 3;
 }
 
 // Client Messages
@@ -116,8 +125,13 @@ message StorageLocationResponse {
     repeated StorageNode locations = 1;
 }
 
+message StoredLocationType {
+	StorageType storageType = 1;
+	StorageNode location = 2;
+}
+
 message StoredLocationResponse {
-	repeated StorageNode locations = 1;
+	repeated StoredLocationType storedLocationType = 1;
 	string filename = 2;
 }
 
