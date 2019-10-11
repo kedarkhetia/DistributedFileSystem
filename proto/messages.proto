@@ -16,6 +16,12 @@ enum StorageType {
 	REPLICA = 1;
 }
 
+enum NodeType {
+	CLIENT = 0;
+	CONTROLLER = 1;
+	STORAGE = 2;
+}
+
 // Controller Messages
 message Controller {
     oneof msg {
@@ -30,7 +36,7 @@ message Controller {
 
 message StoredLocationRequest {
 	string filename = 1;
-	int32 chunkId = 2;
+	NodeType nodeType = 3;
 }
 
 message StorageNode {
@@ -71,6 +77,8 @@ message Storage {
         StorageNodeResponse storeNodeResponse = 2;
         UploadFile uploadFile = 3;
         StorageFeedback storageFeedback = 4;
+        StoredLocationResponse storedLocationResponse = 5;
+        DownloadFile downloadFile = 6;
     }
 }
 
@@ -85,7 +93,6 @@ message Data {
 
 message StoreChunk {
 	string fileName = 1;
-	int32 chunkId = 2;
 	Data data = 3;
 	StorageNode primary = 4;
 	repeated StorageNode replicas = 5;
@@ -96,6 +103,7 @@ message UploadFile {
 	string filename = 1;
 	StorageNode storageNode = 2;
 	StorageType storageType = 3;
+	NodeType nodeType = 4;
 }
 
 // Client Messages

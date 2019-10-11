@@ -79,7 +79,7 @@ public class DistributedFileSystem {
 		}
 		client.getStorageLocations(chunkedFileName);
         List<Messages.StorageNode> locations = getStorageNodes().get();
-        storageFeedbacks.add(storeInStorage(chunkedFileName, i, dataBuilder.build(), locations));
+        storageFeedbacks.add(storeInStorage(chunkedFileName, dataBuilder.build(), locations));
 		buffer.clear();
     }
     
@@ -96,13 +96,12 @@ public class DistributedFileSystem {
         });
 	}
     
-    private Future<Messages.StorageFeedback> storeInStorage(String filename, int id, Messages.Data data, List<Messages.StorageNode> locations) {
+    private Future<Messages.StorageFeedback> storeInStorage(String filename, Messages.Data data, List<Messages.StorageNode> locations) {
 		return threadPool.submit(() -> {
 			Messages.StorageNode primary = locations.get(0);
 			locations.remove(0);
 			Messages.StoreChunk chunk = Messages.StoreChunk.newBuilder()
 					.setFileName(filename)
-					.setChunkId(id)
 					.setData(data)
 					.setPrimary(primary)
 					.addAllReplicas(locations)
@@ -148,7 +147,7 @@ public class DistributedFileSystem {
 		List<Future<Messages.DownloadFile>> writeTaskCallbacks = new LinkedList<>();
 		for(int i=0; i < chunkCount; i++) {
     		String chunkName = filename + CHUNK_SUFFIX + i;
-    		List<Messages.StoredLocationType> storedLocationType = getStoredNodes(chunkName, i).get();
+    		List<Messages.StoredLocationType> storedLocationType = getStoredNodes(chunkName).get();
     		Future<Messages.DownloadFile> downloadFileFuture = getDataFromLocations(storedLocationType, chunkName, i);
     		if(i == 0) {
     			if(downloadFileFuture.get() == null) {
@@ -173,11 +172,11 @@ public class DistributedFileSystem {
     
     private Future<Messages.DownloadFile> getDataFromLocations(List<Messages.StoredLocationType> storedLocationType, String chunkName, int chunkIndex) {
     	return threadPool.submit(() -> {
-    		System.out.println("----------------------");
-    		System.out.println(storedLocationType);
+    		//System.out.println("----------------------");
+    		//System.out.println(storedLocationType);
     		for(int j=0; j<storedLocationType.size(); j++) {
-    			System.out.println(storedLocationType.get(j).getStorageType());
-    			Messages.DownloadFile downloadedChunk = getStoredData(chunkName, storedLocationType.get(j)).get();
+    			//System.out.println(storedLocationType.get(j).getStorageType());
+    			Messages.DownloadFile downloadedChunk = getStoredData(chunkName, storedLocationType.get(j)).get(); 
     			if(downloadedChunk.getFileFound()) {
     				return downloadedChunk;
     			}
@@ -195,13 +194,14 @@ public class DistributedFileSystem {
 					.setFilename(chunkName)
 					.setStorageType(storedLocationType.getStorageType())
 					.setStorageNode(node)
+					.setNodeType(Messages.NodeType.CLIENT)
 					.build());
     		synchronized(MessageDispatcher.chunkToData) {
 				while(!MessageDispatcher.chunkToData.containsKey(chunkName)) {
 					MessageDispatcher.chunkToData.wait(TIME_OUT);
 				}
 				Messages.DownloadFile data = MessageDispatcher.chunkToData.remove(chunkName);
-				System.out.println(chunkName);
+				//System.out.println(chunkName);
 				storageClientProxy.disconnect();
 				MessageDispatcher.chunkToData.notifyAll();
 				return data;
@@ -209,10 +209,10 @@ public class DistributedFileSystem {
     	});
     }
     
-    private Future<List<Messages.StoredLocationType>> getStoredNodes(String chunkName, int chunkId) {
+    private Future<List<Messages.StoredLocationType>> getStoredNodes(String chunkName) {
     	return threadPool.submit(() -> {
     		ControllerClientProxy controllerClientProxy = new ControllerClientProxy();
-    		controllerClientProxy.getStoredLocations(chunkName, chunkId);
+    		controllerClientProxy.getStoredLocations(chunkName, Messages.NodeType.CLIENT);
     		synchronized(MessageDispatcher.chunkToLocation) {
 				while(!MessageDispatcher.chunkToLocation.containsKey(chunkName)) {
 					MessageDispatcher.chunkToLocation.wait(TIME_OUT);

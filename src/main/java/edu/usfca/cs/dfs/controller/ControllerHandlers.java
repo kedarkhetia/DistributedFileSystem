@@ -103,12 +103,18 @@ public class ControllerHandlers {
     	Messages.StoredLocationResponse.Builder locationBuilder = Messages.StoredLocationResponse.newBuilder();
     	locationBuilder.addAllStoredLocationType(storageLocationTypes);
     	locationBuilder.setFilename(storedLocationRequest.getFilename());
-    	System.out.println("---------------------");
-    	System.out.println(locationBuilder.build());
-    	return Messages.ProtoMessage.newBuilder()
-    			.setClient(Messages.Client.newBuilder()
-    					.setStoredLocationResponse(locationBuilder.build()))
-    			.build();
+    	if(storedLocationRequest.getNodeType() == Messages.NodeType.CLIENT) {
+    		return Messages.ProtoMessage.newBuilder()
+        			.setClient(Messages.Client.newBuilder()
+        					.setStoredLocationResponse(locationBuilder.build()))
+        			.build();
+    	}
+    	else {
+    		return Messages.ProtoMessage.newBuilder()
+        			.setStorage(Messages.Storage.newBuilder()
+        					.setStoredLocationResponse(locationBuilder.build()))
+        			.build();
+    	}
     }
     
     public static synchronized void monitorHeartBeats() {

@@ -32,12 +32,12 @@ public class ControllerClientProxy {
     	
     }
     
-    public void getStoredLocations(String filename, int i) {
+    public void getStoredLocations(String filename, Messages.NodeType nodeType) {
     	client.sendMessage(Messages.ProtoMessage.newBuilder()
     			.setController(Messages.Controller.newBuilder()
     					.setStoredLocationRequest(Messages.StoredLocationRequest.newBuilder()
     							.setFilename(filename)
-    							.setChunkId(i)
+    							.setNodeType(nodeType)
     							.build())
     					.build())
     			.build());

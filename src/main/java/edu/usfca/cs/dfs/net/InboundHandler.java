@@ -2,6 +2,7 @@ package edu.usfca.cs.dfs.net;
 
 import java.io.IOException;
 import java.net.InetSocketAddress;
+import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.ExecutionException;
 
 import edu.usfca.cs.dfs.exceptions.InvalidMessageException;
@@ -39,9 +40,8 @@ extends SimpleChannelInboundHandler<Messages.ProtoMessage> {
     }
 
     @Override
-    public void channelRead0(
-            ChannelHandlerContext ctx,
-            Messages.ProtoMessage msg) throws InvalidMessageException, IOException, InterruptedException, ExecutionException {
+    public void channelRead0(ChannelHandlerContext ctx, Messages.ProtoMessage msg) 
+    		throws InvalidMessageException, IOException, InterruptedException, ExecutionException, NoSuchAlgorithmException {
         if(msg.hasController()) {
             Messages.ProtoMessage resp = edu.usfca.cs.dfs.controller.MessageDispatcher.dispatch(msg.getController());
             if(resp != null) {
