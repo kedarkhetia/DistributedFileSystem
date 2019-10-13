@@ -36,7 +36,7 @@ public class DistributedFileSystem {
 
     public DistributedFileSystem() {}
 
-    public boolean put(String filename) throws IOException, InterruptedException, ExecutionException {
+    public synchronized boolean put(String filename) throws IOException, InterruptedException, ExecutionException {
     	List<Future<Messages.StorageFeedback>> storageFeedbacks = new LinkedList<>();
     	Path path = Paths.get(filename);
     	int count = (int) Files.size(path) / chunkSize;
@@ -63,7 +63,7 @@ public class DistributedFileSystem {
         return true;
     }
     
-    private void sendData(FileChannel inChannel, String filename, int i, int chunkSize, int totalChunks,
+    private synchronized void sendData(FileChannel inChannel, String filename, int i, int chunkSize, int totalChunks,
     		ControllerClientProxy client, List<Future<Messages.StorageFeedback>> storageFeedbacks) 
     				throws IOException, InterruptedException, ExecutionException {
     	ByteBuffer buffer = ByteBuffer.allocate(chunkSize);
@@ -96,7 +96,7 @@ public class DistributedFileSystem {
         });
 	}
     
-    private Future<Messages.StorageFeedback> storeInStorage(String filename, Messages.Data data, List<Messages.StorageNode> locations) {
+    private synchronized Future<Messages.StorageFeedback> storeInStorage(String filename, Messages.Data data, List<Messages.StorageNode> locations) {
 		return threadPool.submit(() -> {
 			Messages.StorageNode primary = locations.get(0);
 			locations.remove(0);
@@ -129,7 +129,7 @@ public class DistributedFileSystem {
 		});
 	}
     
-    public void close() throws InterruptedException {
+    public synchronized void close() throws InterruptedException {
     	threadPool.shutdown();
     	while (!threadPool.awaitTermination(24, TimeUnit.HOURS)) {
     	    System.out.println("Waiting! Awaiting Distributed File System Termination!");
@@ -137,7 +137,7 @@ public class DistributedFileSystem {
     	System.out.println("DSF Shutdown Successfully!");
     }
     
-    public boolean get(String storagePath, String filename) throws InterruptedException, ExecutionException, IOException {
+    public synchronized boolean get(String storagePath, String filename) throws InterruptedException, ExecutionException, IOException {
     	int chunkCount = 1;
     	Path path = Paths.get(storagePath+filename);
 		if(!Files.exists(path)) {
@@ -148,6 +148,10 @@ public class DistributedFileSystem {
 		for(int i=0; i < chunkCount; i++) {
     		String chunkName = filename + CHUNK_SUFFIX + i;
     		List<Messages.StoredLocationType> storedLocationType = getStoredNodes(chunkName).get();
+    		System.out.println("Chunk Name: " + chunkName);
+    		for(Messages.StoredLocationType location : storedLocationType) {
+    			System.out.println("Location: " + location.getLocation().getHost() + ":" + location.getLocation().getPort() + " " + location.getStorageType());
+    		}
     		Future<Messages.DownloadFile> downloadFileFuture = getDataFromLocations(storedLocationType, chunkName, i);
     		if(i == 0) {
     			if(downloadFileFuture.get() == null) {
@@ -226,7 +230,7 @@ public class DistributedFileSystem {
     	});
     }
     
-    public List<Messages.StorageNode> getActiveNodes() throws InterruptedException, ExecutionException {
+    public synchronized List<Messages.StorageNode> getActiveNodes() throws InterruptedException, ExecutionException {
     	ControllerClientProxy clientControllerProxy = new ControllerClientProxy();
     	clientControllerProxy.getActiveNodes();
     	Future<List<Messages.StorageNode>> storageNodeList = threadPool.submit(() -> {
@@ -243,7 +247,7 @@ public class DistributedFileSystem {
     	return storageNodeList.get();
     }
     
-    public long getTotalDiskspace() throws InterruptedException, ExecutionException {
+    public synchronized long getTotalDiskspace() throws InterruptedException, ExecutionException {
     	ControllerClientProxy clientControllerProxy = new ControllerClientProxy();
     	clientControllerProxy.getTotalDiskspace();
     	Future<Long> totalDiskspace = threadPool.submit(() -> {
@@ -260,7 +264,7 @@ public class DistributedFileSystem {
     	return totalDiskspace.get();
     }
     
-    public Map<Messages.StorageNode, Long> getRequestsServed() throws InterruptedException, ExecutionException {
+    public synchronized Map<Messages.StorageNode, Long> getRequestsServed() throws InterruptedException, ExecutionException {
     	ControllerClientProxy clientControllerProxy = new ControllerClientProxy();
     	clientControllerProxy.getProcessedRequest();
     	Future<List<Messages.RequestPerNode>> totalRequestServed = threadPool.submit(() -> {

@@ -30,7 +30,7 @@ public class MessagePipeline extends ChannelInitializer<SocketChannel> {
          * field to give us 32 bits' worth of frame length, which should be
          * plenty for the future... */
         pipeline.addLast(
-                new LengthFieldBasedFrameDecoder(Constants.CHUNK_SIZE + 200, 0, 4, 0, 4));
+                new LengthFieldBasedFrameDecoder(Constants.CHUNK_SIZE + 2024, 0, 4, 0, 4));
         pipeline.addLast(
                 new ProtobufDecoder(Messages.ProtoMessage.getDefaultInstance()));
 

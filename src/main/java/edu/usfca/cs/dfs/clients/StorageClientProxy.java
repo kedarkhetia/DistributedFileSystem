@@ -25,6 +25,14 @@ public class StorageClientProxy {
     			.build()); 
     }
     
+    public void replicate(Messages.Replicate replicate) {
+    	client.sendMessage(Messages.ProtoMessage.newBuilder()
+    			.setStorage(Messages.Storage.newBuilder()
+    					.setReplicate(replicate)
+    					.build())
+    			.build()); 
+    }
+    
     public void disconnect() {
     	client.disconnect();
     }

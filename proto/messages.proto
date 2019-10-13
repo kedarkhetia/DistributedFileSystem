@@ -79,7 +79,16 @@ message Storage {
         StorageFeedback storageFeedback = 4;
         StoredLocationResponse storedLocationResponse = 5;
         DownloadFile downloadFile = 6;
+        Replicate replicate = 7;
     }
+}
+
+message Replicate {
+	StorageNode fromNode = 1;
+	StorageNode toNode = 2;
+	StorageNode forNode = 3;
+	StorageType storageType = 4;
+	NodeType nodeType = 5;
 }
 
 message StorageNodeResponse {
@@ -97,6 +106,7 @@ message StoreChunk {
 	StorageNode primary = 4;
 	repeated StorageNode replicas = 5;
 	StorageType storageType = 6;
+	NodeType nodeType = 7;
 }
 
 message UploadFile {

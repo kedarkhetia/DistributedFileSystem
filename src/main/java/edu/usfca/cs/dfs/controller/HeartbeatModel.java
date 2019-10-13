@@ -1,7 +1,8 @@
 package edu.usfca.cs.dfs.controller;
 
-import java.util.Date;
+import java.util.List;
 
+import edu.usfca.cs.dfs.messages.Messages;
 import edu.usfca.cs.dfs.utils.BloomFilter;
 
 public class HeartbeatModel {
@@ -10,7 +11,14 @@ public class HeartbeatModel {
 	private long availableSpace;
 	private long processedRequests;
 	private long timestamp;
+	private List<Messages.StorageNode> replicaList;
 	
+	public List<Messages.StorageNode> getReplicaList() {
+		return replicaList;
+	}
+	public void setReplicaList(List<Messages.StorageNode> replicaList) {
+		this.replicaList = replicaList;
+	}
 	public long getTimestamp() {
 		return timestamp;
 	}

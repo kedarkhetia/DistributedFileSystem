@@ -21,11 +21,13 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
 import com.github.luben.zstd.Zstd;
+import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import edu.usfca.cs.dfs.clients.ControllerClientProxy;
 import edu.usfca.cs.dfs.clients.StorageClientProxy;
 import edu.usfca.cs.dfs.messages.Messages;
+import edu.usfca.cs.dfs.messages.Messages.Data;
 import edu.usfca.cs.dfs.utils.Constants;
 
 public class StorageHandlers {
@@ -39,11 +41,11 @@ public class StorageHandlers {
 	public static synchronized Messages.ProtoMessage store(Messages.StoreChunk chunk) 
 			throws InterruptedException, ExecutionException, IOException, NoSuchAlgorithmException {
 		Messages.StorageType storageType = chunk.getStorageType();
+		System.out.println("Filename: " + chunk.getFileName());
 		String pathString = STORAGE_PATH;
-		Messages.StorageNode location;
 		Messages.StorageNode primary = chunk.getPrimary();
 		List<Messages.StorageNode> locations = chunk.getReplicasList();
-		location = primary;
+		Messages.StorageNode location = primary;
 		if(storageType == Messages.StorageType.PRIMARY) {
 			if(selfNode == null) selfNode = location;
 			pathString += location.getHost() + location.getPort() + "/";
@@ -68,14 +70,24 @@ public class StorageHandlers {
 		byte[] checksum = checksum(data);
 		Files.write(checksumPath, checksum, StandardOpenOption.CREATE);
 		Files.write(path, data, StandardOpenOption.CREATE);
-		Messages.ProtoMessage message = getFeedback(storageType, location, chunk);
+		Messages.StorageFeedback feedback = getStorageFeedback(chunk, location).get();
+		processedRequest++;
 		if(!locations.isEmpty()) {
 			location = locations.get(0);
-			//System.out.println(locations.get(0));
-			sendToReplicas(primary, location, locations, chunk);
+			//System.out.println("Forwarding data to: " + locations);
+			Messages.StoreChunk newChunk = Messages.StoreChunk.newBuilder()
+				.setData(chunk.getData())
+				.setFileName(chunk.getFileName())
+				.setPrimary(primary)
+				.addAllReplicas(locations)
+				.setStorageType(Messages.StorageType.REPLICA)
+			.build();
+			sendToReplicas(newChunk, location);
 		}
-		processedRequest++;
-		return message;
+		if(storageType == Messages.StorageType.PRIMARY && chunk.getNodeType() == Messages.NodeType.CLIENT) {
+			return getFeedback(feedback);
+		}
+		return null; // ToDo: Feedback to storage if time permits.
 	}
 	
 	private static synchronized void createFilesAndDirs(Path path) throws IOException {
@@ -85,48 +97,110 @@ public class StorageHandlers {
 		}
 	}
 	
-	private static synchronized Messages.ProtoMessage getFeedback(Messages.StorageType storageType, 
-			Messages.StorageNode location, Messages.StoreChunk chunk) throws InterruptedException, ExecutionException {
-		if(storageType == Messages.StorageType.PRIMARY) {
+	private static synchronized Messages.ProtoMessage getFeedback(Messages.StorageFeedback feedback) throws InterruptedException, ExecutionException {
 			return Messages.ProtoMessage.newBuilder()
 					.setClient(Messages.Client.newBuilder()
-							.setStorageFeedback(getStorageFeedback(chunk, location, storageType).get())
+							.setStorageFeedback(feedback)
 							.build())
 					.build();
-		}
-		return null;
 	}
 	
 	private static synchronized Future<Messages.StorageFeedback> getStorageFeedback(Messages.StoreChunk chunk,
-			Messages.StorageNode location, Messages.StorageType storageType) {
+			Messages.StorageNode location) {
 		ControllerClientProxy controllerProxy = new ControllerClientProxy();
-		controllerProxy.sendStorageProof(chunk.getFileName(), storageType, location);
+		controllerProxy.sendStorageProof(chunk.getFileName(), chunk.getStorageType(), location);
 		return threadPool.submit(() -> {
-			synchronized(MessageDispatcher.storageFeedback) {
-				if(!MessageDispatcher.storageFeedback.getIsStored()) {
-					MessageDispatcher.storageFeedback.wait(TIME_OUT);
+			synchronized(MessageDispatcher.storageFeedbackMap) {
+				while(!MessageDispatcher.storageFeedbackMap.containsKey(chunk.getFileName())) {
+					MessageDispatcher.storageFeedbackMap.wait(TIME_OUT);
 				}
-				Messages.StorageFeedback feedback = MessageDispatcher.storageFeedback.build();
-				MessageDispatcher.storageFeedback.setIsStored(false);
+				Messages.StorageFeedback feedback = MessageDispatcher.storageFeedbackMap.remove(chunk.getFileName());
+				MessageDispatcher.storageFeedbackMap.notifyAll();
 				controllerProxy.disconnect();
 				return feedback;
 			}
 		});
 	}
 	
-	public static synchronized Messages.StorageFeedback sendToReplicas(Messages.StorageNode primary, Messages.StorageNode location,
-			List<Messages.StorageNode> locations, Messages.StoreChunk chunk) throws InterruptedException, ExecutionException {
+	public static synchronized void sendToReplicas(Messages.StoreChunk storeChunk, Messages.StorageNode location) throws InterruptedException, ExecutionException {
 		StorageClientProxy storageClientProxy = new StorageClientProxy(location.getHost(), location.getPort());
-		storageClientProxy.upload(Messages.StoreChunk.newBuilder()
-				.setData(chunk.getData())
-				.setFileName(chunk.getFileName())
-				.setPrimary(primary)
-				.addAllReplicas(locations)
-				.setStorageType(Messages.StorageType.REPLICA)
-				.build());
-		Messages.StorageFeedback feedback = getStorageFeedback(chunk, location, Messages.StorageType.REPLICA).get();
+		storageClientProxy.upload(storeChunk);
+		//Messages.StorageFeedback feedback = getStorageFeedback(storeChunk, location, storeChunk.getStorageType()).get();
+		//System.out.println("Updated for node: " + location.getHost()+":"+location.getPort() + storeChunk.getFileName());
 		storageClientProxy.disconnect();
-		return feedback;
+		//return feedback;
+	}
+	
+	public static synchronized void replicate(Messages.Replicate replicate) throws IOException, InterruptedException, ExecutionException {
+		Messages.StorageNode forNode = replicate.getForNode();
+		Messages.StorageNode fromNode = replicate.getFromNode();
+		Messages.StorageNode toNode = replicate.getToNode();
+		String directoryPath = STORAGE_PATH + fromNode.getHost() + fromNode.getPort() + "/";
+		System.out.println(directoryPath);
+		if(replicate.getStorageType() == Messages.StorageType.REPLICA) {
+			String curDirPath = directoryPath + Constants.REPLICA_PATH + "/" + forNode.getHost() + forNode.getPort() + "/";
+			String newDirPath = directoryPath + Constants.REPLICA_PATH + "/" + toNode.getHost() + toNode.getPort() + "/";
+			File curDir = new File(curDirPath);
+			File newDir = new File(newDirPath);
+			curDir.renameTo(newDir);
+			directoryPath = newDirPath;
+		}
+		File directory = new File(directoryPath);
+		replicateAllFiles(directory, replicate);
+	}
+	
+	private static synchronized void replicateAllFiles(File directory, Messages.Replicate replicate) 
+			throws IOException, InterruptedException, ExecutionException {
+		if(directory == null || directory.listFiles() == null) return;
+		for(File file : directory.listFiles()) {
+			if(file.isDirectory()) {
+				if(!file.getAbsolutePath().endsWith(Constants.CHECKSUM_PATH) && 
+						!file.getAbsolutePath().endsWith(Constants.REPLICA_PATH))
+						replicateAllFiles(file, replicate);
+			}
+			else {
+				byte[] data = readFile(file);
+				if(directory.getAbsolutePath().endsWith(Constants.COMPRESSED_PATH)) {
+					data = decompress(data);
+				}
+				List<Messages.StorageNode> locations = new LinkedList<>();
+				Messages.StorageType storageType = replicate.getStorageType();
+				Messages.StoreChunk chunk;
+				if(storageType == Messages.StorageType.PRIMARY) {
+					storageType = Messages.StorageType.REPLICA;
+					locations.add(replicate.getToNode());
+					chunk = Messages.StoreChunk.newBuilder()
+							.setData(Data.parseFrom(data))
+							.setFileName(file.getName())
+							.setPrimary(replicate.getFromNode())
+							.addAllReplicas(locations)
+							.setStorageType(storageType)
+							.setNodeType(replicate.getNodeType())
+						.build();
+					System.out.println("Replicating Primary to Replica for file: " + chunk.getFileName() + " from "
+							+ replicate.getFromNode().getHost() + ":" + replicate.getFromNode().getPort() + " to "
+									+ replicate.getToNode().getHost() + ":" + replicate.getToNode().getPort());
+					sendToReplicas(chunk, replicate.getToNode());
+				}
+				else {
+					storageType = Messages.StorageType.PRIMARY;
+					//locations.add(replicate.getFromNode());
+					chunk = Messages.StoreChunk.newBuilder()
+							.setData(Data.parseFrom(data))
+							.setFileName(file.getName())
+							.setPrimary(replicate.getToNode())
+							.addAllReplicas(locations)
+							.setStorageType(storageType)
+							.setNodeType(replicate.getNodeType())
+						.build();
+//					System.out.println("Replicating Replica to Primary for file: " + chunk.getFileName() + " from "
+//							+ replicate.getFromNode().getHost() + ":" + replicate.getFromNode().getPort() + " to "
+//									+ replicate.getToNode().getHost() + ":" + replicate.getToNode().getPort());
+					sendToReplicas(chunk, replicate.getToNode());
+				}
+			}
+		}
+		
 	}
 	
 	private static synchronized byte[] checksum(byte[] data) throws IOException, NoSuchAlgorithmException {
@@ -312,7 +386,7 @@ public class StorageHandlers {
     	});
     }
 	
-	private static byte[] readFile(File file) throws IOException {
+	private static synchronized byte[] readFile(File file) throws IOException {
 		byte[] data = new byte[(int) file.length()];
 		if(file.exists()) {
 			System.out.println("Exists: " + file.getAbsolutePath());

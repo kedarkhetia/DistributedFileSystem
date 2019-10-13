@@ -20,7 +20,8 @@ public class Client {
     public static void userInterface(DistributedFileSystem dfs) throws IOException, InterruptedException, ExecutionException {
     	System.out.println("Welcome to Distributed File System");
     	System.out.println("Note: To put/get any data from DFS your file must be present in the Classpath directory.");
-    	Scanner scn = new Scanner(System.in);
+    	@SuppressWarnings("resource")
+		Scanner scn = new Scanner(System.in);
     	while(true) {
     		System.out.println();
     		System.out.println("Enter your choice from below supported commands: ");

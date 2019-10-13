@@ -3,7 +3,7 @@ package edu.usfca.cs.dfs.utils;
 public class Constants {
 	
 	// Storage Server constants
-    public static String REPLICA_PATH = "replica/";
+    public static String REPLICA_PATH = "replica";
     public static String COMPRESSED_PATH = "compressed";
     public static String CHECKSUM_PATH = "checksum";
     public static String CHECKSUM_SUFFIX = "_checksum";
