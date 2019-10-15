@@ -6,8 +6,8 @@ import edu.usfca.cs.dfs.utils.Constants;
 public class ControllerClientProxy {
     private Client client;
 
-    public ControllerClientProxy() {
-        this.client = new Client(Constants.CONTROLLER_HOSTNAME, Constants.CONTROLLER_PORT);
+    public ControllerClientProxy(String hostname, int port, int chunkSize) {
+        this.client = new Client(hostname, port, chunkSize);
     }
 
     public void getStorageLocations(String filename) { 

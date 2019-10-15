@@ -20,11 +20,11 @@ public class ServerMessageRouter {
 
     private Map<Integer, ChannelFuture> ports = new HashMap<>();
 
-    public ServerMessageRouter() {
+    public ServerMessageRouter(int chunkSize) {
         bossGroup = new NioEventLoopGroup();
         workerGroup = new NioEventLoopGroup(4);
 
-        pipeline = new MessagePipeline();
+        pipeline = new MessagePipeline(chunkSize);
 
         bootstrap = new ServerBootstrap()
             .group(bossGroup, workerGroup)
@@ -36,7 +36,7 @@ public class ServerMessageRouter {
 
     public ServerMessageRouter(int readBufferSize, int maxWriteQueueSize) {
         /* Ignoring parameters ... */
-        this();
+        this(0);
     }
 
     /**

@@ -8,8 +8,8 @@ public class ControllerServer {
     private ServerMessageRouter messageRouter;
     private int port;
 
-    public ControllerServer(int port) {
-        messageRouter = new ServerMessageRouter();
+    public ControllerServer(int port, int chunkSize) {
+        messageRouter = new ServerMessageRouter(chunkSize);
         this.port = port;
     }
 

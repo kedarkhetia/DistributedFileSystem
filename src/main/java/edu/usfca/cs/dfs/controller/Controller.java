@@ -8,9 +8,12 @@ import java.nio.file.Paths;
 
 import com.google.gson.Gson;
 
+import edu.usfca.cs.dfs.utils.Config;
+
 public class Controller {
 	
 	private static String CONFIG_KEY = "-config";
+	public static Config config;
 
     public static void main(String args[]) throws IOException {
     	Gson gson = new Gson();
@@ -18,8 +21,8 @@ public class Controller {
     		System.out.println("Failed to start server: Incomplete/Invalid arguments passed");
     		return;
     	}
-    	ControllerHandlers.CONFIG = gson.fromJson(readFile(Paths.get(args[1])), Config.class);
-        ControllerServer s = new ControllerServer(ControllerHandlers.CONFIG.getPort());
+    	config = gson.fromJson(readFile(Paths.get(args[1])), Config.class);
+        ControllerServer s = new ControllerServer(config.getControllerPort(), config.getChunkSize());
         s.start();
         ControllerHandlers.monitorHeartBeats();
     }

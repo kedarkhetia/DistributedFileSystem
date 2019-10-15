@@ -32,7 +32,6 @@ import edu.usfca.cs.dfs.utils.Constants;
 
 public class StorageHandlers {
 	
-	public static String STORAGE_PATH;
 	private static long processedRequest = 0;
 	private static ExecutorService threadPool = Executors.newFixedThreadPool(Constants.NUMBER_OF_THREADS);
 	private static Messages.StorageNode selfNode;
@@ -42,7 +41,7 @@ public class StorageHandlers {
 			throws InterruptedException, ExecutionException, IOException, NoSuchAlgorithmException {
 		Messages.StorageType storageType = chunk.getStorageType();
 		System.out.println("Filename: " + chunk.getFileName());
-		String pathString = STORAGE_PATH;
+		String pathString = Storage.config.getStoragePath();
 		Messages.StorageNode primary = chunk.getPrimary();
 		List<Messages.StorageNode> locations = chunk.getReplicasList();
 		Messages.StorageNode location = primary;
@@ -107,7 +106,8 @@ public class StorageHandlers {
 	
 	private static synchronized Future<Messages.StorageFeedback> getStorageFeedback(Messages.StoreChunk chunk,
 			Messages.StorageNode location) {
-		ControllerClientProxy controllerProxy = new ControllerClientProxy();
+		ControllerClientProxy controllerProxy = new ControllerClientProxy(Storage.config.getControllerHost(),
+				Storage.config.getControllerPort(), Storage.config.getChunkSize());
 		controllerProxy.sendStorageProof(chunk.getFileName(), chunk.getStorageType(), location);
 		return threadPool.submit(() -> {
 			synchronized(MessageDispatcher.storageFeedbackMap) {
@@ -122,8 +122,10 @@ public class StorageHandlers {
 		});
 	}
 	
-	public static synchronized void sendToReplicas(Messages.StoreChunk storeChunk, Messages.StorageNode location) throws InterruptedException, ExecutionException {
-		StorageClientProxy storageClientProxy = new StorageClientProxy(location.getHost(), location.getPort());
+	public static synchronized void sendToReplicas(Messages.StoreChunk storeChunk, Messages.StorageNode location) 
+			throws InterruptedException, ExecutionException {
+		StorageClientProxy storageClientProxy = new StorageClientProxy(location.getHost(), location.getPort(), 
+				Storage.config.getChunkSize());
 		storageClientProxy.upload(storeChunk);
 		//Messages.StorageFeedback feedback = getStorageFeedback(storeChunk, location, storeChunk.getStorageType()).get();
 		//System.out.println("Updated for node: " + location.getHost()+":"+location.getPort() + storeChunk.getFileName());
@@ -135,7 +137,7 @@ public class StorageHandlers {
 		Messages.StorageNode forNode = replicate.getForNode();
 		Messages.StorageNode fromNode = replicate.getFromNode();
 		Messages.StorageNode toNode = replicate.getToNode();
-		String directoryPath = STORAGE_PATH + fromNode.getHost() + fromNode.getPort() + "/";
+		String directoryPath = Storage.config.getStoragePath() + fromNode.getHost() + fromNode.getPort() + "/";
 		System.out.println(directoryPath);
 		if(replicate.getStorageType() == Messages.StorageType.REPLICA) {
 			String curDirPath = directoryPath + Constants.REPLICA_PATH + "/" + forNode.getHost() + forNode.getPort() + "/";
@@ -244,9 +246,10 @@ public class StorageHandlers {
 			@Override
 			public void run() {
 				while(true) {
-					ControllerClientProxy contorllerClientProxy = new ControllerClientProxy();
+					ControllerClientProxy contorllerClientProxy = new ControllerClientProxy(Storage.config.getControllerHost(),
+							Storage.config.getControllerPort(), Storage.config.getChunkSize());
 					try {
-						contorllerClientProxy.sendHeartbeat(Files.getFileStore(Paths.get(STORAGE_PATH)).getUsableSpace(), 
+						contorllerClientProxy.sendHeartbeat(Files.getFileStore(Paths.get(Storage.config.getStoragePath())).getUsableSpace(), 
 								processedRequest, Messages.StorageNode.newBuilder()
 									.setHost(selfHostName)
 									.setPort(selfPort)
@@ -286,7 +289,7 @@ public class StorageHandlers {
 	
 	public static synchronized Messages.ProtoMessage retrive(Messages.UploadFile uploadFile) 
 			throws IOException, NoSuchAlgorithmException, InterruptedException, ExecutionException {
-		String filePath = STORAGE_PATH + uploadFile.getStorageNode().getHost()
+		String filePath = Storage.config.getStoragePath() + uploadFile.getStorageNode().getHost()
 				+ uploadFile.getStorageNode().getPort() + "/";
 		if(uploadFile.getStorageType() == Messages.StorageType.REPLICA) {
 			filePath += Constants.REPLICA_PATH + "/";
@@ -349,7 +352,7 @@ public class StorageHandlers {
     	return threadPool.submit(() -> {
     		Messages.StorageNode node = storedLocationType.getLocation();
     		StorageClientProxy storageClientProxy = new StorageClientProxy(node.getHost(), 
-					node.getPort());
+					node.getPort(), Storage.config.getChunkSize());
 			storageClientProxy.download(Messages.UploadFile.newBuilder()
 					.setFilename(chunkName)
 					.setStorageType(storedLocationType.getStorageType())
@@ -372,7 +375,8 @@ public class StorageHandlers {
 	
 	private static synchronized Future<List<Messages.StoredLocationType>> getStoredNodes(String chunkName) {
     	return threadPool.submit(() -> {
-    		ControllerClientProxy controllerClientProxy = new ControllerClientProxy();
+    		ControllerClientProxy controllerClientProxy = new ControllerClientProxy(Storage.config.getControllerHost(),
+    				Storage.config.getControllerPort(), Storage.config.getChunkSize());
     		controllerClientProxy.getStoredLocations(chunkName, Messages.NodeType.STORAGE);
     		synchronized(MessageDispatcher.locations) {
 				if(MessageDispatcher.locations.isEmpty()) {

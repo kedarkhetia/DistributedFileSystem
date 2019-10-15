@@ -8,8 +8,8 @@ public class StorageServer {
 	private ServerMessageRouter messageRouter;
     private int port;
 
-    public StorageServer(int port) {
-        messageRouter = new ServerMessageRouter();
+    public StorageServer(int port, int chunkSize) {
+        messageRouter = new ServerMessageRouter(chunkSize);
         this.port = port;
     }
 

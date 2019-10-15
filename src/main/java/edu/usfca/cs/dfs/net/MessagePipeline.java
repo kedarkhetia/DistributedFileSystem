@@ -1,6 +1,7 @@
 package edu.usfca.cs.dfs.net;
 
 import edu.usfca.cs.dfs.messages.Messages;
+import edu.usfca.cs.dfs.storage.Storage;
 import edu.usfca.cs.dfs.utils.Constants;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
@@ -13,9 +14,11 @@ import io.netty.handler.codec.protobuf.ProtobufEncoder;
 public class MessagePipeline extends ChannelInitializer<SocketChannel> {
 
     private InboundHandler inboundHandler;
+    private int chunkSize;
 
-    public MessagePipeline() {
+    public MessagePipeline(int chunkSize) {
         this.inboundHandler = new InboundHandler();
+        this.chunkSize = chunkSize;
     }
 
     @Override
@@ -30,7 +33,7 @@ public class MessagePipeline extends ChannelInitializer<SocketChannel> {
          * field to give us 32 bits' worth of frame length, which should be
          * plenty for the future... */
         pipeline.addLast(
-                new LengthFieldBasedFrameDecoder(Constants.CHUNK_SIZE + 2024, 0, 4, 0, 4));
+                new LengthFieldBasedFrameDecoder(Constants.CHUNK_SIZE_BYTES * chunkSize + 2024, 0, 4, 0, 4));
         pipeline.addLast(
                 new ProtobufDecoder(Messages.ProtoMessage.getDefaultInstance()));
 
@@ -39,4 +42,6 @@ public class MessagePipeline extends ChannelInitializer<SocketChannel> {
         pipeline.addLast(new ProtobufEncoder());
         pipeline.addLast(inboundHandler);
     }
+    
+    
 }

@@ -5,8 +5,8 @@ import edu.usfca.cs.dfs.messages.Messages;
 public class StorageClientProxy {
     private Client client;
 
-    public StorageClientProxy(String hostname, int port) {
-        this.client = new Client(hostname, port);
+    public StorageClientProxy(String hostname, int port, int chunkSize) {
+        this.client = new Client(hostname, port, chunkSize);
     }
     
     public void upload(Messages.StoreChunk chunk) {

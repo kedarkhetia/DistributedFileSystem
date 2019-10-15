@@ -4,6 +4,7 @@ import edu.usfca.cs.dfs.clients.StorageClientProxy;
 import edu.usfca.cs.dfs.messages.Messages;
 import edu.usfca.cs.dfs.messages.Messages.ControllerEmptyMessage;
 import edu.usfca.cs.dfs.utils.BloomFilter;
+import edu.usfca.cs.dfs.utils.Config;
 import edu.usfca.cs.dfs.utils.Constants;
 
 import java.util.*;
@@ -17,9 +18,6 @@ public class ControllerHandlers {
     private static Random random = new Random();
     private static ExecutorService threadPool = Executors.newFixedThreadPool(Constants.NUMBER_OF_THREADS);
     private static volatile Map<Messages.StorageNode, HeartbeatModel> heartbeatMap = new ConcurrentHashMap<>();
-    
-    public static Config CONFIG;
-    
 
     public static synchronized Messages.ProtoMessage getStorageLocations(Messages.StorageLocationRequest request) throws InterruptedException, ExecutionException {
         //System.out.println(nodeList);
@@ -39,13 +37,16 @@ public class ControllerHandlers {
             	for(Messages.StorageNode replica : replicas) {
             		if(hasStorageSpace(request.getSize(), replica)) {
             			locations.add(replica);
+            			if(locations.size() == Controller.config.getReplicaCount()) {
+            				break;
+            			}
             		}
             	}	
             } else {
             	replicas = new LinkedList<>();
             }
             int i = (primaryIndex + 1) % nodeList.size();
-            while(i != primaryIndex && locations.size() < CONFIG.getReplicaCount()) {
+            while(i != primaryIndex && locations.size() < Controller.config.getReplicaCount()) {
             	Messages.StorageNode replica = nodeList.get(i);
             	if(!locations.contains(replica) && hasStorageSpace(request.getSize(), replica)) {
                 		locations.add(replica);
@@ -72,8 +73,8 @@ public class ControllerHandlers {
     	//System.out.println("Received Heartbeat From: " + heartbeat.getStorageNode().getHost() + ":" + heartbeat.getStorageNode().getPort());
     	if(!heartbeatMap.containsKey(heartbeat.getStorageNode())) {
 			HeartbeatModel newHeartbeat = new HeartbeatModel();
-			newHeartbeat.setReplica(new BloomFilter(CONFIG.getReplicaK(), CONFIG.getReplicaM()));
-			newHeartbeat.setPrimary(new BloomFilter(CONFIG.getPrimaryK(), CONFIG.getPrimaryM()));
+			newHeartbeat.setReplica(new BloomFilter(Controller.config.getReplicaK(), Controller.config.getReplicaM()));
+			newHeartbeat.setPrimary(new BloomFilter(Controller.config.getPrimaryK(), Controller.config.getPrimaryM()));
 			heartbeatMap.put(heartbeat.getStorageNode(), newHeartbeat);
 		}
 		HeartbeatModel heartbeatModel = heartbeatMap.get(heartbeat.getStorageNode());
@@ -84,7 +85,7 @@ public class ControllerHandlers {
     
     public static synchronized Messages.ProtoMessage updateBloomFilter(Messages.StoreProof storeProof) {
     	HeartbeatModel heartbeat = heartbeatMap.get(storeProof.getNode());
-    	if(storeProof.getStorageType() == Messages.StorageType.PRIMARY && heartbeat.getPrimary() != null) {
+    	if(storeProof.getStorageType() == Messages.StorageType.PRIMARY && heartbeat != null) {
     		heartbeat.getPrimary().put(storeProof.getFilename().getBytes());
     		System.out.println(storeProof.getNode().getHost() + storeProof.getNode().getPort() + " Primary: " + heartbeat.getPrimary());
     	} else {
@@ -225,7 +226,8 @@ public class ControllerHandlers {
     		@Override
     		public void run() {
     			Messages.StorageNode node = replicate.getFromNode();
-    			StorageClientProxy storageClientProxy = new StorageClientProxy(node.getHost(), node.getPort());
+    			StorageClientProxy storageClientProxy = new StorageClientProxy(node.getHost(), node.getPort(), 
+    					Controller.config.getChunkSize());
     			storageClientProxy.replicate(replicate);
     			storageClientProxy.disconnect();
     		}

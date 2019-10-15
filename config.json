@@ -1,0 +1,12 @@
+{
+	"primaryK": "3",
+	"primaryM": "100",
+	"replicaK": "3",
+	"replicaM": "200",
+	"replicaCount": "3",
+	"chunkSize": "1",
+	"controllerHost": "localhost",
+	"controllerPort": "7777",
+	"storagePath": "./bigdata/",
+	"retrivePath": "./bigdata/retrived/"
+}

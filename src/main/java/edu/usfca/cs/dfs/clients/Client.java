@@ -13,9 +13,9 @@ public class Client {
     private Channel channel;
     private EventLoopGroup workerGroup;
 
-    public Client(String hostname, int port) {
+    public Client(String hostname, int port, int chunkSize) {
         this.workerGroup = new NioEventLoopGroup();
-        MessagePipeline pipeline = new MessagePipeline();
+        MessagePipeline pipeline = new MessagePipeline(chunkSize);
 
         Bootstrap bootstrap = new Bootstrap()
                 .group(workerGroup)

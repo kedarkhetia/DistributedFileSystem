@@ -1,19 +1,35 @@
 package edu.usfca.cs.dfs.dfsclient;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.ExecutionException;
 
+import com.google.gson.Gson;
+
+import edu.usfca.cs.dfs.controller.ControllerHandlers;
 import edu.usfca.cs.dfs.messages.Messages;
+import edu.usfca.cs.dfs.utils.Config;
 
 public class Client {
-	private static String RETRIVE_PATH = "./bigdata/retrived/";
+	private static String CONFIG_KEY = "-config";
+    public static Config config;
 
     public static void main(String args[]) throws IOException, InterruptedException, ExecutionException {
-        DistributedFileSystem dfs = new DistributedFileSystem();
+    	Gson gson = new Gson();
+    	if(args.length != 2 || !args[0].equals(CONFIG_KEY)) {
+    		System.out.println("Failed to start client: Incomplete/Invalid arguments passed");
+    		return;
+    	}
+    	config = gson.fromJson(readFile(Paths.get(args[1])), Config.class);
+    	DistributedFileSystem dfs = new DistributedFileSystem();
         userInterface(dfs);
     }
     
@@ -52,7 +68,7 @@ public class Client {
     		case 2:
     			System.out.print("Enter Filename: ");
     			String getfilename = scn.next();
-    			if(dfs.get(RETRIVE_PATH, getfilename)) {
+    			if(dfs.get(config.getRetrivePath(), getfilename)) {
     				System.out.println("File successfully got data from DFS");
     			}
     			else {
@@ -87,4 +103,15 @@ public class Client {
     		
     	}
     }
+    
+    public static String readFile(Path path) throws IOException  {
+		StringBuilder sb = new StringBuilder();
+		try (BufferedReader in = Files.newBufferedReader(path)) {
+			String line;
+			while((line = in.readLine()) != null) {
+				sb.append(line);
+			}
+			return sb.toString();
+		}
+	}
 }

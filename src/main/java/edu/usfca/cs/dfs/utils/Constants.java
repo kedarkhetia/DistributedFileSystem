@@ -8,21 +8,12 @@ public class Constants {
     public static String CHECKSUM_PATH = "checksum";
     public static String CHECKSUM_SUFFIX = "_checksum";
     public static int COMPRESS_LEVEL = 3;
-
-    // Controller Server
-    public static String CONTROLLER_HOSTNAME = "localhost";
-    public static int CONTROLLER_PORT = 7777;
-
-    // Storage Server
-
-    // Number of Replicas
-    public static int REPLICAS = 3;
     
     // Thread Pools for Client
-    public static int NUMBER_OF_THREADS = 5;
+    public static int NUMBER_OF_THREADS = 10;
     
     // Number of ChunkSize
-    public static int CHUNK_SIZE = 1048570;
+    public static int CHUNK_SIZE_BYTES = 1000000; 
     //public static int CHUNK_SIZE = 3;
     
     // Heartbeat time difference
