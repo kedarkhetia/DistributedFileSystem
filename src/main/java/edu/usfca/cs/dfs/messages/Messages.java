@@ -10936,7 +10936,12 @@ public final class Messages {
     com.google.protobuf.ByteString getData();
 
     /**
-     * <code>int32 chunks = 2;</code>
+     * <code>int32 size = 2;</code>
+     */
+    int getSize();
+
+    /**
+     * <code>int32 chunks = 3;</code>
      */
     int getChunks();
   }
@@ -10993,6 +10998,11 @@ public final class Messages {
             }
             case 16: {
 
+              size_ = input.readInt32();
+              break;
+            }
+            case 24: {
+
               chunks_ = input.readInt32();
               break;
             }
@@ -11037,10 +11047,19 @@ public final class Messages {
       return data_;
     }
 
-    public static final int CHUNKS_FIELD_NUMBER = 2;
+    public static final int SIZE_FIELD_NUMBER = 2;
+    private int size_;
+    /**
+     * <code>int32 size = 2;</code>
+     */
+    public int getSize() {
+      return size_;
+    }
+
+    public static final int CHUNKS_FIELD_NUMBER = 3;
     private int chunks_;
     /**
-     * <code>int32 chunks = 2;</code>
+     * <code>int32 chunks = 3;</code>
      */
     public int getChunks() {
       return chunks_;
@@ -11063,8 +11082,11 @@ public final class Messages {
       if (!data_.isEmpty()) {
         output.writeBytes(1, data_);
       }
+      if (size_ != 0) {
+        output.writeInt32(2, size_);
+      }
       if (chunks_ != 0) {
-        output.writeInt32(2, chunks_);
+        output.writeInt32(3, chunks_);
       }
       unknownFields.writeTo(output);
     }
@@ -11079,9 +11101,13 @@ public final class Messages {
         size += com.google.protobuf.CodedOutputStream
           .computeBytesSize(1, data_);
       }
+      if (size_ != 0) {
+        size += com.google.protobuf.CodedOutputStream
+          .computeInt32Size(2, size_);
+      }
       if (chunks_ != 0) {
         size += com.google.protobuf.CodedOutputStream
-          .computeInt32Size(2, chunks_);
+          .computeInt32Size(3, chunks_);
       }
       size += unknownFields.getSerializedSize();
       memoizedSize = size;
@@ -11100,6 +11126,8 @@ public final class Messages {
 
       if (!getData()
           .equals(other.getData())) return false;
+      if (getSize()
+          != other.getSize()) return false;
       if (getChunks()
           != other.getChunks()) return false;
       if (!unknownFields.equals(other.unknownFields)) return false;
@@ -11115,6 +11143,8 @@ public final class Messages {
       hash = (19 * hash) + getDescriptor().hashCode();
       hash = (37 * hash) + DATA_FIELD_NUMBER;
       hash = (53 * hash) + getData().hashCode();
+      hash = (37 * hash) + SIZE_FIELD_NUMBER;
+      hash = (53 * hash) + getSize();
       hash = (37 * hash) + CHUNKS_FIELD_NUMBER;
       hash = (53 * hash) + getChunks();
       hash = (29 * hash) + unknownFields.hashCode();
@@ -11252,6 +11282,8 @@ public final class Messages {
         super.clear();
         data_ = com.google.protobuf.ByteString.EMPTY;
 
+        size_ = 0;
+
         chunks_ = 0;
 
         return this;
@@ -11281,6 +11313,7 @@ public final class Messages {
       public edu.usfca.cs.dfs.messages.Messages.Data buildPartial() {
         edu.usfca.cs.dfs.messages.Messages.Data result = new edu.usfca.cs.dfs.messages.Messages.Data(this);
         result.data_ = data_;
+        result.size_ = size_;
         result.chunks_ = chunks_;
         onBuilt();
         return result;
@@ -11332,6 +11365,9 @@ public final class Messages {
         if (other == edu.usfca.cs.dfs.messages.Messages.Data.getDefaultInstance()) return this;
         if (other.getData() != com.google.protobuf.ByteString.EMPTY) {
           setData(other.getData());
+        }
+        if (other.getSize() != 0) {
+          setSize(other.getSize());
         }
         if (other.getChunks() != 0) {
           setChunks(other.getChunks());
@@ -11394,15 +11430,41 @@ public final class Messages {
         return this;
       }
 
+      private int size_ ;
+      /**
+       * <code>int32 size = 2;</code>
+       */
+      public int getSize() {
+        return size_;
+      }
+      /**
+       * <code>int32 size = 2;</code>
+       */
+      public Builder setSize(int value) {
+        
+        size_ = value;
+        onChanged();
+        return this;
+      }
+      /**
+       * <code>int32 size = 2;</code>
+       */
+      public Builder clearSize() {
+        
+        size_ = 0;
+        onChanged();
+        return this;
+      }
+
       private int chunks_ ;
       /**
-       * <code>int32 chunks = 2;</code>
+       * <code>int32 chunks = 3;</code>
        */
       public int getChunks() {
         return chunks_;
       }
       /**
-       * <code>int32 chunks = 2;</code>
+       * <code>int32 chunks = 3;</code>
        */
       public Builder setChunks(int value) {
         
@@ -11411,7 +11473,7 @@ public final class Messages {
         return this;
       }
       /**
-       * <code>int32 chunks = 2;</code>
+       * <code>int32 chunks = 3;</code>
        */
       public Builder clearChunks() {
         
@@ -22533,42 +22595,42 @@ public final class Messages {
       "de\030\003 \001(\0132\014.StorageNode\022!\n\013storageType\030\004 " +
       "\001(\0162\014.StorageType\022\033\n\010nodeType\030\005 \001(\0162\t.No" +
       "deType\"#\n\023StorageNodeResponse\022\014\n\004flag\030\001 " +
-      "\001(\010\"$\n\004Data\022\014\n\004data\030\001 \001(\014\022\016\n\006chunks\030\002 \001(" +
-      "\005\"\262\001\n\nStoreChunk\022\020\n\010fileName\030\001 \001(\t\022\023\n\004da" +
-      "ta\030\003 \001(\0132\005.Data\022\035\n\007primary\030\004 \001(\0132\014.Stora" +
-      "geNode\022\036\n\010replicas\030\005 \003(\0132\014.StorageNode\022!" +
-      "\n\013storageType\030\006 \001(\0162\014.StorageType\022\033\n\010nod" +
-      "eType\030\007 \001(\0162\t.NodeType\"\201\001\n\nUploadFile\022\020\n" +
-      "\010filename\030\001 \001(\t\022!\n\013storageNode\030\002 \001(\0132\014.S" +
-      "torageNode\022!\n\013storageType\030\003 \001(\0162\014.Storag" +
-      "eType\022\033\n\010nodeType\030\004 \001(\0162\t.NodeType\"\325\002\n\006C" +
-      "lient\022;\n\027storageLocationResponse\030\001 \001(\0132\030" +
-      ".StorageLocationResponseH\000\0229\n\026storedLoca" +
-      "tionResponse\030\002 \001(\0132\027.StoredLocationRespo" +
-      "nseH\000\022%\n\014downloadFile\030\003 \001(\0132\r.DownloadFi" +
-      "leH\000\022+\n\017storageFeedback\030\004 \001(\0132\020.StorageF" +
-      "eedbackH\000\022#\n\013activeNodes\030\005 \001(\0132\014.ActiveN" +
-      "odesH\000\022)\n\016totalDiskSpace\030\006 \001(\0132\017.TotalDi" +
-      "skSpaceH\000\022(\n\rrequestServed\030\007 \001(\0132\017.Reque" +
-      "stsServedH\000B\005\n\003msg\"5\n\017StorageFeedback\022\020\n" +
-      "\010isStored\030\001 \001(\010\022\020\n\010filename\030\002 \001(\t\"B\n\014Dow" +
-      "nloadFile\022\021\n\tfileFound\030\001 \001(\010\022\037\n\nstoreChu" +
-      "nk\030\002 \001(\0132\013.StoreChunk\":\n\027StorageLocation" +
-      "Response\022\037\n\tlocations\030\001 \003(\0132\014.StorageNod" +
-      "e\"W\n\022StoredLocationType\022!\n\013storageType\030\001" +
-      " \001(\0162\014.StorageType\022\036\n\010location\030\002 \001(\0132\014.S" +
-      "torageNode\"[\n\026StoredLocationResponse\022/\n\022" +
-      "storedLocationType\030\001 \003(\0132\023.StoredLocatio" +
-      "nType\022\020\n\010filename\030\002 \001(\t\"0\n\013ActiveNodes\022!" +
-      "\n\013activeNodes\030\001 \003(\0132\014.StorageNode\"#\n\016Tot" +
-      "alDiskSpace\022\021\n\tdiskSpace\030\001 \001(\003\">\n\016Reques" +
-      "tPerNode\022\032\n\004node\030\001 \001(\0132\014.StorageNode\022\020\n\010" +
-      "requests\030\002 \001(\003\":\n\016RequestsServed\022(\n\017requ" +
-      "estsPerNode\030\001 \003(\0132\017.RequestPerNode*\'\n\013St" +
-      "orageType\022\013\n\007PRIMARY\020\000\022\013\n\007REPLICA\020\001*3\n\010N" +
-      "odeType\022\n\n\006CLIENT\020\000\022\016\n\nCONTROLLER\020\001\022\013\n\007S" +
-      "TORAGE\020\002B\033\n\031edu.usfca.cs.dfs.messagesb\006p" +
-      "roto3"
+      "\001(\010\"2\n\004Data\022\014\n\004data\030\001 \001(\014\022\014\n\004size\030\002 \001(\005\022" +
+      "\016\n\006chunks\030\003 \001(\005\"\262\001\n\nStoreChunk\022\020\n\010fileNa" +
+      "me\030\001 \001(\t\022\023\n\004data\030\003 \001(\0132\005.Data\022\035\n\007primary" +
+      "\030\004 \001(\0132\014.StorageNode\022\036\n\010replicas\030\005 \003(\0132\014" +
+      ".StorageNode\022!\n\013storageType\030\006 \001(\0162\014.Stor" +
+      "ageType\022\033\n\010nodeType\030\007 \001(\0162\t.NodeType\"\201\001\n" +
+      "\nUploadFile\022\020\n\010filename\030\001 \001(\t\022!\n\013storage" +
+      "Node\030\002 \001(\0132\014.StorageNode\022!\n\013storageType\030" +
+      "\003 \001(\0162\014.StorageType\022\033\n\010nodeType\030\004 \001(\0162\t." +
+      "NodeType\"\325\002\n\006Client\022;\n\027storageLocationRe" +
+      "sponse\030\001 \001(\0132\030.StorageLocationResponseH\000" +
+      "\0229\n\026storedLocationResponse\030\002 \001(\0132\027.Store" +
+      "dLocationResponseH\000\022%\n\014downloadFile\030\003 \001(" +
+      "\0132\r.DownloadFileH\000\022+\n\017storageFeedback\030\004 " +
+      "\001(\0132\020.StorageFeedbackH\000\022#\n\013activeNodes\030\005" +
+      " \001(\0132\014.ActiveNodesH\000\022)\n\016totalDiskSpace\030\006" +
+      " \001(\0132\017.TotalDiskSpaceH\000\022(\n\rrequestServed" +
+      "\030\007 \001(\0132\017.RequestsServedH\000B\005\n\003msg\"5\n\017Stor" +
+      "ageFeedback\022\020\n\010isStored\030\001 \001(\010\022\020\n\010filenam" +
+      "e\030\002 \001(\t\"B\n\014DownloadFile\022\021\n\tfileFound\030\001 \001" +
+      "(\010\022\037\n\nstoreChunk\030\002 \001(\0132\013.StoreChunk\":\n\027S" +
+      "torageLocationResponse\022\037\n\tlocations\030\001 \003(" +
+      "\0132\014.StorageNode\"W\n\022StoredLocationType\022!\n" +
+      "\013storageType\030\001 \001(\0162\014.StorageType\022\036\n\010loca" +
+      "tion\030\002 \001(\0132\014.StorageNode\"[\n\026StoredLocati" +
+      "onResponse\022/\n\022storedLocationType\030\001 \003(\0132\023" +
+      ".StoredLocationType\022\020\n\010filename\030\002 \001(\t\"0\n" +
+      "\013ActiveNodes\022!\n\013activeNodes\030\001 \003(\0132\014.Stor" +
+      "ageNode\"#\n\016TotalDiskSpace\022\021\n\tdiskSpace\030\001" +
+      " \001(\003\">\n\016RequestPerNode\022\032\n\004node\030\001 \001(\0132\014.S" +
+      "torageNode\022\020\n\010requests\030\002 \001(\003\":\n\016Requests" +
+      "Served\022(\n\017requestsPerNode\030\001 \003(\0132\017.Reques" +
+      "tPerNode*\'\n\013StorageType\022\013\n\007PRIMARY\020\000\022\013\n\007" +
+      "REPLICA\020\001*3\n\010NodeType\022\n\n\006CLIENT\020\000\022\016\n\nCON" +
+      "TROLLER\020\001\022\013\n\007STORAGE\020\002B\033\n\031edu.usfca.cs.d" +
+      "fs.messagesb\006proto3"
     };
     descriptor = com.google.protobuf.Descriptors.FileDescriptor
       .internalBuildGeneratedFileFrom(descriptorData,
@@ -22645,7 +22707,7 @@ public final class Messages {
     internal_static_Data_fieldAccessorTable = new
       com.google.protobuf.GeneratedMessageV3.FieldAccessorTable(
         internal_static_Data_descriptor,
-        new java.lang.String[] { "Data", "Chunks", });
+        new java.lang.String[] { "Data", "Size", "Chunks", });
     internal_static_StoreChunk_descriptor =
       getDescriptor().getMessageTypes().get(12);
     internal_static_StoreChunk_fieldAccessorTable = new

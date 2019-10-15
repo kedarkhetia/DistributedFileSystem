@@ -48,7 +48,8 @@ public class ControllerHandlers {
             int i = (primaryIndex + 1) % nodeList.size();
             while(i != primaryIndex && locations.size() < Controller.config.getReplicaCount()) {
             	Messages.StorageNode replica = nodeList.get(i);
-            	if(!locations.contains(replica) && hasStorageSpace(request.getSize(), replica)) {
+            	if(!locations.contains(replica) && primary != replica
+            			&& hasStorageSpace(request.getSize(), replica)) {
                 		locations.add(replica);
                 		replicas.add(replica);
                 		i = (i+1) % nodeList.size();
@@ -158,12 +159,11 @@ public class ControllerHandlers {
     	threadPool.execute(new Runnable() {
     		@Override
     		public void run() {
-    			long cap = 3000; // Cap for 3000 milliseconds 
     			while(true) {
     				List<Messages.StorageNode> removeNodes = new LinkedList<>();
         			for(Messages.StorageNode node : heartbeatMap.keySet()) {
         				HeartbeatModel heartbeat = heartbeatMap.get(node);
-        				if(System.currentTimeMillis() - heartbeat.getTimestamp() > Constants.HEARTBEAT_INTERVAL + cap) {
+        				if(System.currentTimeMillis() - heartbeat.getTimestamp() > Constants.HEARTBEAT_INTERVAL + Constants.HEARTBEAT_CAP) {
         					removeNodes.add(node);
         				}
         			}

@@ -7,8 +7,6 @@ import java.net.InetAddress;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
 
 import com.google.gson.Gson;
 
@@ -28,11 +26,12 @@ public class Storage {
     		return;
     	}
     	config = gson.fromJson(readFile(Paths.get(args[1])), Config.class);
+    	StorageHandlers.clearStoragePath(new File(config.getStoragePath()), false);
     	startStorageServer(Integer.parseInt(args[3]));
     }
     
     public static void startStorageServer(int storagePort) throws IOException, InterruptedException {
-    	int port = 7765;
+    	int port = 7772;
     	StorageServer s = new StorageServer(port, config.getChunkSize());
     	StorageHandlers.startHeartbeat(InetAddress.getLocalHost().getHostAddress(), port);
         s.start();

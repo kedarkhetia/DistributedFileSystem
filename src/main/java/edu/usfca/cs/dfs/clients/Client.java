@@ -2,7 +2,6 @@ package edu.usfca.cs.dfs.clients;
 
 import edu.usfca.cs.dfs.messages.Messages;
 import edu.usfca.cs.dfs.net.MessagePipeline;
-import edu.usfca.cs.dfs.utils.Constants;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;

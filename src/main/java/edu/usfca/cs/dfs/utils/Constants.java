@@ -10,7 +10,7 @@ public class Constants {
     public static int COMPRESS_LEVEL = 3;
     
     // Thread Pools for Client
-    public static int NUMBER_OF_THREADS = 10;
+    public static int NUMBER_OF_THREADS = 5;
     
     // Number of ChunkSize
     public static int CHUNK_SIZE_BYTES = 1000000; 
@@ -18,4 +18,5 @@ public class Constants {
     
     // Heartbeat time difference
     public static int HEARTBEAT_INTERVAL = 5000;
+    public static int HEARTBEAT_CAP = 15000;
 }

@@ -97,7 +97,8 @@ message StorageNodeResponse {
 
 message Data {
 	bytes data = 1;
-	int32 chunks = 2;
+	int32 size = 2;
+	int32 chunks = 3;
 }
 
 message StoreChunk {
