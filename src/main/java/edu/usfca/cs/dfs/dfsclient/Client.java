@@ -6,15 +6,16 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
 import java.util.concurrent.ExecutionException;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.gson.Gson;
 
-import edu.usfca.cs.dfs.controller.ControllerHandlers;
 import edu.usfca.cs.dfs.messages.Messages;
 import edu.usfca.cs.dfs.utils.Config;
 
@@ -24,16 +25,19 @@ import edu.usfca.cs.dfs.utils.Config;
  *
  */
 public class Client {
+	private final static Logger log = LogManager.getLogger(Client.class);
+	
 	private static String CONFIG_KEY = "-config";
     public static Config config;
 
     public static void main(String args[]) throws IOException, InterruptedException, ExecutionException {
     	Gson gson = new Gson();
-    	if(args.length != 2 || !args[0].equals(CONFIG_KEY)) {
+    	if(!args[0].equals(CONFIG_KEY)) {
     		System.out.println("Failed to start client: Incomplete/Invalid arguments passed");
     		return;
     	}
     	config = gson.fromJson(readFile(Paths.get(args[1])), Config.class);
+    	log.info("Starting DFS client.");
     	DistributedFileSystem dfs = new DistributedFileSystem();
         userInterface(dfs);
     }

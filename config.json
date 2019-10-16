@@ -4,7 +4,7 @@
 	"replicaK": "3",
 	"replicaM": "1000",
 	"replicaCount": "3",
-	"chunkSize": "56",
+	"chunkSize": "1",
 	"controllerHost": "localhost",
 	"controllerPort": "7777",
 	"storagePath": "./bigdata/",

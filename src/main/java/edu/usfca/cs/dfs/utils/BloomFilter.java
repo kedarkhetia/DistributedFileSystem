@@ -8,8 +8,9 @@ import com.sangupta.murmur.Murmur3;
  *
  */
 public class BloomFilter {
-    private byte[] filter;
+	private byte[] filter;
     private int k, m;
+    private int n = 0;
 
     public BloomFilter(int k, int m) {
         this.k = k;
@@ -18,7 +19,9 @@ public class BloomFilter {
     }
 
     public void put(byte[] data) {
+        n++;
         int[] tempHash = hash(data);
+        
         for(int i=0; i<tempHash.length; i++) {
             filter[tempHash[i]] = 1;
         }
@@ -43,20 +46,18 @@ public class BloomFilter {
     }
 
     public int getNumOfItems() {
-        int count = 0;
-        for(int i=0; i<filter.length; i++) {
-            if(filter[i] == 1) count++;
-        }
-        return count;
+        return n;
     }
 
     private int[] hash(byte[] data) {
         int[] tempHash = new int[k];
-        tempHash[0] = Math.abs((int) Murmur3.hash_x64_128(data, data.length, 0)[0] % m);
-        for(int i=1; i<k; i++) {
-            tempHash[i] = Math.abs((int) Murmur3.hash_x64_128(data, data.length, tempHash[i-1])[0] % m);
+
+        int hash1 = Math.abs((int) Murmur3.hash_x64_128(data, data.length, 0)[0] % m);
+        int hash2 = Math.abs((int) Murmur3.hash_x64_128(data, data.length, hash1)[0] % m);
+        for(int i=0; i<k; i++) {
+        	tempHash[i] = (int) (hash1 + i*hash2) % m;
         }
-        return tempHash;
+    	return tempHash;
     }
 
     public String toString() {

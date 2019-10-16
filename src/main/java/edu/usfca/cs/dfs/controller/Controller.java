@@ -6,6 +6,9 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.gson.Gson;
 
 import edu.usfca.cs.dfs.utils.Config;
@@ -16,17 +19,19 @@ import edu.usfca.cs.dfs.utils.Config;
  *
  */
 public class Controller {
+	private final static Logger log = LogManager.getLogger(Controller.class);
 	
 	private static String CONFIG_KEY = "-config";
 	public static Config config;
 
     public static void main(String args[]) throws IOException {
     	Gson gson = new Gson();
-    	if(args.length != 2 || !args[0].equals(CONFIG_KEY)) {
+    	if(!args[0].equals(CONFIG_KEY)) {
     		System.out.println("Failed to start server: Incomplete/Invalid arguments passed");
     		return;
     	}
     	config = gson.fromJson(readFile(Paths.get(args[1])), Config.class);
+    	log.info("Starting Controller Server on: " + config.getControllerHost() + config.getControllerPort());
         ControllerServer s = new ControllerServer(config.getControllerPort(), config.getChunkSize());
         s.start();
         ControllerHandlers.monitorHeartBeats();

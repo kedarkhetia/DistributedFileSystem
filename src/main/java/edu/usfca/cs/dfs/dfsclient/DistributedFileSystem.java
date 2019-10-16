@@ -23,6 +23,9 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.google.protobuf.ByteString;
 
 /**
@@ -31,6 +34,7 @@ import com.google.protobuf.ByteString;
  *
  */
 public class DistributedFileSystem {
+	private final static Logger log = LogManager.getLogger(DistributedFileSystem.class);
 	
 	private int chunkSize = Constants.CHUNK_SIZE_BYTES * Client.config.getChunkSize();
 	private static ExecutorService threadPool = Executors.newFixedThreadPool(Constants.NUMBER_OF_THREADS);
@@ -47,10 +51,12 @@ public class DistributedFileSystem {
      * @throws ExecutionException
      */
     public synchronized boolean put(String filename) throws IOException, InterruptedException, ExecutionException {
+    	log.info("Got put request for file: " + filename);
     	List<Future<Messages.StorageFeedback>> storageFeedbacks = new LinkedList<>();
     	Path path = Paths.get(filename);
     	int count = (int) (Files.size(path) / chunkSize);
     	int carry = (int) (Files.size(path) % chunkSize) == 0 ? 0 : 1;
+    	log.info("File divided in " + (count+carry) + " chunks.");
         int i = 0;
     	ControllerClientProxy controllerClient = new ControllerClientProxy(Client.config.getControllerHost(), 
     			Client.config.getControllerPort(), Client.config.getChunkSize());
@@ -67,6 +73,7 @@ public class DistributedFileSystem {
         for(Future<Messages.StorageFeedback> feedback : storageFeedbacks) {
         	if(!feedback.get().getIsStored()) {
         		controllerClient.disconnect();
+        		log.info("Storage failed for " + feedback.get().getFilename());
         		return false;
         	}
         }
@@ -107,6 +114,7 @@ public class DistributedFileSystem {
 		}
 		client.getStorageLocations(chunkedFileName);
         List<Messages.StorageNode> locations = getStorageNodes().get();
+        log.info("Storing chunk: " + chunkedFileName + " at " + locations);
         storageFeedbacks.add(storeInStorage(chunkedFileName, dataBuilder.build(), locations));
 		buffer.clear();
     }
@@ -181,9 +189,9 @@ public class DistributedFileSystem {
     public synchronized void close() throws InterruptedException {
     	threadPool.shutdown();
     	while (!threadPool.awaitTermination(24, TimeUnit.HOURS)) {
-    	    System.out.println("Awaiting Distributed File System Termination!");
+    	    log.info("Awaiting Distributed File System Termination!");
     	}
-    	System.out.println("DSF Shutdown Successfully!");
+    	log.info("DSF Shutdown Successfully!");
     }
     
     /**
@@ -196,6 +204,7 @@ public class DistributedFileSystem {
      * @throws ExecutionException
      */
     public synchronized boolean get(String storagePath, String filename) throws InterruptedException, IOException, ExecutionException {
+    	log.info("Getting data for " + filename);
     	int chunkCount = 1;
     	Path path = Paths.get(storagePath+filename);
 		if(!Files.exists(path)) {
@@ -208,6 +217,7 @@ public class DistributedFileSystem {
     		Future<Integer> chunkCountFuture = getDataFromLocations(storedLocationTypes, chunkName, 
     				i, storagePath+filename);
     		if(chunkCountFuture.get() != null && chunkCountFuture.get() == -1) {
+    			log.info("Cannot get data from storageLocations.");
 				return false;
 			}
     		if(i == 0) {

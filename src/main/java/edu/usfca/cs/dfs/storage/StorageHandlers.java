@@ -20,6 +20,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+
 import com.github.luben.zstd.Zstd;
 import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
@@ -31,6 +34,7 @@ import edu.usfca.cs.dfs.messages.Messages.Data;
 import edu.usfca.cs.dfs.utils.Constants;
 
 public class StorageHandlers {
+	private final static Logger log = LogManager.getLogger(StorageHandlers.class);
 	
 	private static long processedRequest = 0;
 	private static ExecutorService threadPool = Executors.newFixedThreadPool(Constants.NUMBER_OF_THREADS);
@@ -51,7 +55,7 @@ public class StorageHandlers {
 	public static synchronized Messages.ProtoMessage store(Messages.StoreChunk chunk) 
 			throws InterruptedException, ExecutionException, IOException, NoSuchAlgorithmException {
 		Messages.StorageType storageType = chunk.getStorageType();
-		System.out.println("Filename: " + chunk.getFileName());
+		log.info("Filename: " + chunk.getFileName());
 		String pathString = Storage.config.getStoragePath();
 		Messages.StorageNode primary = chunk.getPrimary();
 		List<Messages.StorageNode> locations = chunk.getReplicasList();
@@ -114,7 +118,7 @@ public class StorageHandlers {
 	private static synchronized void replicate(List<Messages.StorageNode> locations, Messages.StoreChunk chunk, 
 			Messages.StorageNode primary) throws InterruptedException, ExecutionException {
 		Messages.StorageNode location = locations.get(0);
-		//System.out.println("Forwarding data to: " + locations);
+		log.info("Forwarding data to: " + locations);
 		Messages.StoreChunk newChunk = Messages.StoreChunk.newBuilder()
 			.setData(chunk.getData())
 			.setFileName(chunk.getFileName())
@@ -190,10 +194,8 @@ public class StorageHandlers {
 		StorageClientProxy storageClientProxy = new StorageClientProxy(location.getHost(), location.getPort(), 
 				Storage.config.getChunkSize());
 		storageClientProxy.upload(storeChunk);
-		//Messages.StorageFeedback feedback = getStorageFeedback(storeChunk, location, storeChunk.getStorageType()).get();
-		//System.out.println("Updated for node: " + location.getHost()+":"+location.getPort() + storeChunk.getFileName());
+		log.info("Updated for node: " + location.getHost()+":"+location.getPort() + storeChunk.getFileName());
 		storageClientProxy.disconnect();
-		//return feedback;
 	}
 	
 	/**
@@ -209,7 +211,6 @@ public class StorageHandlers {
 		Messages.StorageNode fromNode = replicate.getFromNode();
 		Messages.StorageNode toNode = replicate.getToNode();
 		String directoryPath = Storage.config.getStoragePath() + fromNode.getHost() + fromNode.getPort() + "/";
-		System.out.println(directoryPath);
 		if(replicate.getStorageType() == Messages.StorageType.REPLICA) {
 			String curDirPath = directoryPath + Constants.REPLICA_PATH + "/" + forNode.getHost() + forNode.getPort() + "/";
 			String newDirPath = directoryPath + Constants.REPLICA_PATH + "/" + toNode.getHost() + toNode.getPort() + "/";
@@ -277,7 +278,7 @@ public class StorageHandlers {
 				.setStorageType(storageType)
 				.setNodeType(replicate.getNodeType())
 			.build();
-		System.out.println("Replicating Replica to Primary for file: " + chunk.getFileName() + " from "
+		log.info("Replicating Replica to Primary for file: " + chunk.getFileName() + " from "
 				+ replicate.getFromNode().getHost() + ":" + replicate.getFromNode().getPort() + " to "
 						+ replicate.getToNode().getHost() + ":" + replicate.getToNode().getPort());
 		sendToReplicas(chunk, replicate.getToNode());
@@ -305,7 +306,7 @@ public class StorageHandlers {
 				.setStorageType(storageType)
 				.setNodeType(replicate.getNodeType())
 			.build();
-		System.out.println("Replicating Primary to Replica for file: " + chunk.getFileName() + " from "
+		log.info("Replicating Primary to Replica for file: " + chunk.getFileName() + " from "
 				+ replicate.getFromNode().getHost() + ":" + replicate.getFromNode().getPort() + " to "
 						+ replicate.getToNode().getHost() + ":" + replicate.getToNode().getPort());
 		sendToReplicas(chunk, replicate.getToNode());
@@ -321,7 +322,6 @@ public class StorageHandlers {
 	private static synchronized byte[] checksum(byte[] data) throws IOException, NoSuchAlgorithmException {
 		MessageDigest digest = MessageDigest.getInstance("SHA-256");
 		byte[] checksum = digest.digest(data);
-		//System.out.println("Checksum for file: " + filename + " is " + new String(checksum));
 		return checksum;
 	}
 	
@@ -390,7 +390,7 @@ public class StorageHandlers {
 									.build());
 						Thread.sleep(Constants.HEARTBEAT_INTERVAL);
 					} catch (IOException | InterruptedException e) {
-						e.printStackTrace();
+						log.error("Exception occured in startHeartbeat: " + e);
 					}
 					contorllerClientProxy.disconnect();
 				}
@@ -408,7 +408,6 @@ public class StorageHandlers {
 	private static synchronized File getFilePath(File directory, String filename) {
 		File file = new File(directory, filename);
 		if(file.exists()) {
-			//System.out.println(directory.getAbsolutePath() + " " + filename);
 			return directory;
 		}
 		File[] subdirs = directory.listFiles(new FileFilter() {
@@ -420,7 +419,6 @@ public class StorageHandlers {
 		for(File subdir : subdirs) {
 			File newfile = getFilePath(subdir, filename);
 			if(newfile != null) {
-				//System.out.println(directory.getAbsolutePath() + " " + filename);
 				return newfile;
 			}
 		}
@@ -443,8 +441,8 @@ public class StorageHandlers {
 		if(uploadFile.getStorageType() == Messages.StorageType.REPLICA) {
 			filePath += Constants.REPLICA_PATH + "/";
 		}
-		//System.out.println(uploadFile.getStorageType());
 		File directory = new File(filePath);
+		log.info("Retriving file: " + uploadFile.getFilename() + " at location: " + directory.getAbsolutePath());
 		directory = getFilePath(directory, uploadFile.getFilename());
 		if(directory == null) {
 			return fileNotFound(uploadFile);
@@ -452,7 +450,7 @@ public class StorageHandlers {
 		File file = new File(directory, uploadFile.getFilename());
 		byte[] data = readFile(file);
 		if(!verifyChecksum(directory, uploadFile.getFilename(), data)) {
-			//System.out.println("Calling replication for filename: " + uploadFile.getFilename());
+			log.info("Calling replication for filename: " + uploadFile.getFilename());
 			fixStorage(uploadFile.getFilename(), directory);
 			return fileNotFound(uploadFile);
 		}
@@ -473,10 +471,10 @@ public class StorageHandlers {
 			@Override
 			public void run() {
 				try {
+					log.info("Fixing file: " + chunkName);
 					List<Messages.StoredLocationType> storageLocationType = getStoredNodes(chunkName).get();
 					for(Messages.StoredLocationType node : storageLocationType) {
 						if(!(node.getLocation().getHost().equals(selfNode.getHost()) && node.getLocation().getPort() == selfNode.getPort())) {
-							//System.out.println("location: " + node.getLocation() + " selfNode: " + selfNode);
 							Messages.DownloadFile downloadedFile = getStoredData(chunkName, node).get();
 							if(downloadedFile.getFileFound()) {
 								byte[] data = downloadedFile.getStoreChunk().getData().toByteArray();
@@ -495,9 +493,8 @@ public class StorageHandlers {
 						}
 					}
 				} catch (InterruptedException | ExecutionException | NoSuchAlgorithmException | IOException e) {
-					e.printStackTrace();
+					log.info("Exception occured in fixStorage: " + e);
 				}
-				//System.out.println(storageLocationType);
 			}
 		});
 	}
@@ -520,12 +517,10 @@ public class StorageHandlers {
 					.setNodeType(Messages.NodeType.STORAGE)
 					.build());
     		synchronized(MessageDispatcher.downloadFileBuilder) {
-    			//System.out.println("Check is Empty: " + MessageDispatcher.downloadFileBuilder.build().getStoreChunk().getFileName().isEmpty());
-				if(MessageDispatcher.downloadFileBuilder.build().getStoreChunk().getFileName().isEmpty()) {
+    			if(MessageDispatcher.downloadFileBuilder.build().getStoreChunk().getFileName().isEmpty()) {
 					MessageDispatcher.downloadFileBuilder.wait(TIME_OUT);
 				}
 				Messages.DownloadFile data = MessageDispatcher.downloadFileBuilder.build();
-				//System.out.println(data);
 				MessageDispatcher.downloadFileBuilder = Messages.DownloadFile.newBuilder();
 				storageClientProxy.disconnect();
 				return data;
@@ -564,7 +559,7 @@ public class StorageHandlers {
 	private static synchronized byte[] readFile(File file) throws IOException {
 		byte[] data = new byte[(int) file.length()];
 		if(file.exists()) {
-			System.out.println("Exists: " + file.getAbsolutePath());
+			log.info("Reading file: " + file.getAbsolutePath());
 		}
 		RandomAccessFile aFile = new RandomAccessFile(file, "r");
     	FileChannel inChannel = aFile.getChannel();
@@ -587,11 +582,11 @@ public class StorageHandlers {
 	 */
 	private static synchronized boolean verifyChecksum(File directory, String filename, byte[] data) throws IOException, NoSuchAlgorithmException {
 		File file = new File(directory, Constants.CHECKSUM_PATH + "/" + filename + Constants.CHECKSUM_SUFFIX);
-		//System.out.println("Looking for checksum on path: " + file.getAbsolutePath());
+		log.info("Looking for checksum on path: " + file.getAbsolutePath());
 		byte[] expectedChecksum = readFile(file);
-		//System.out.println("Expected checksum for file: " + filename + " is " + new String(expectedChecksum));
+		log.info("Expected checksum for file: " + filename + " is " + new String(expectedChecksum));
 		byte[] obtainedChecksum = checksum(data); 
-		//System.out.println("Obtained checksum for file: " + filename + " is " + new String(obtainedChecksum));
+		log.info("Obtained checksum for file: " + filename + " is " + new String(obtainedChecksum));
 		return Arrays.equals(expectedChecksum, obtainedChecksum);
 	}
 
