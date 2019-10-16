@@ -65,7 +65,7 @@ public class ControllerHandlers {
             int i = (primaryIndex + 1) % nodeList.size();
             while(i != primaryIndex && locations.size() < Controller.config.getReplicaCount()) {
             	Messages.StorageNode replica = nodeList.get(i);
-            	if(!locations.contains(replica) && primary != replica
+            	if(!locations.contains(replica)
             			&& hasStorageSpace(request.getSize(), replica)) {
                 		locations.add(replica);
                 		replicas.add(replica);

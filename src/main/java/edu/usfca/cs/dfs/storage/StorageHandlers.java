@@ -9,7 +9,6 @@ import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.nio.file.StandardOpenOption;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
@@ -24,7 +23,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import com.github.luben.zstd.Zstd;
-import com.google.protobuf.ByteString;
 import com.google.protobuf.InvalidProtocolBufferException;
 
 import edu.usfca.cs.dfs.clients.ControllerClientProxy;
@@ -103,8 +101,8 @@ public class StorageHandlers {
 		Path checksumPath = Paths.get(pathString + Constants.CHECKSUM_PATH + "/" + chunk.getFileName() + Constants.CHECKSUM_SUFFIX);
 		createFilesAndDirs(checksumPath);
 		byte[] checksum = checksum(data);
-		Files.write(checksumPath, checksum, StandardOpenOption.CREATE);
-		Files.write(path, data, StandardOpenOption.CREATE);
+		Files.write(checksumPath, checksum);
+		Files.write(path, data);
 	}
 	
 	/**
@@ -486,8 +484,8 @@ public class StorageHandlers {
 								Path checksumPath = Paths.get(directory.getAbsolutePath() + "/" + Constants.CHECKSUM_PATH + "/" + chunkName + Constants.CHECKSUM_SUFFIX);
 								createFilesAndDirs(checksumPath);
 								byte[] checksum = checksum(data);
-								Files.write(path, data, StandardOpenOption.CREATE);
-								Files.write(checksumPath, checksum, StandardOpenOption.CREATE);
+								Files.write(path, data);
+								Files.write(checksumPath, checksum);
 								return;
 							}
 						}

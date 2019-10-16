@@ -41,7 +41,7 @@ public class Storage {
     }
     
     public static void startStorageServer(int storagePort) throws IOException, InterruptedException {
-    	int port = 7769;
+    	int port = storagePort;
     	StorageServer s = new StorageServer(port, config.getChunkSize());
     	StorageHandlers.startHeartbeat(InetAddress.getLocalHost().getHostName(), port);
         s.start();

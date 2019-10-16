@@ -105,7 +105,6 @@ public class DistributedFileSystem {
 		buffer.flip();
 		buffer.get(data);
 		String chunkedFileName = filename + CHUNK_SUFFIX + i;
-		//System.out.println("Reading chunk, " + chunkedFileName);
 		Messages.Data.Builder dataBuilder = Messages.Data.newBuilder();
 		dataBuilder.setData(ByteString.copyFrom(data));
 		dataBuilder.setSize(size);
@@ -113,10 +112,44 @@ public class DistributedFileSystem {
 			dataBuilder.setChunks(totalChunks);
 		}
 		client.getStorageLocations(chunkedFileName);
-        List<Messages.StorageNode> locations = getStorageNodes().get();
+        List<Messages.StorageNode> locations = filterStorageNodes(getStorageNodes().get(), chunkedFileName);
         log.info("Storing chunk: " + chunkedFileName + " at " + locations);
         storageFeedbacks.add(storeInStorage(chunkedFileName, dataBuilder.build(), locations));
 		buffer.clear();
+    }
+    
+    private List<Messages.StorageNode> filterStorageNodes(List<Messages.StorageNode> nodes, String chunkName) throws InterruptedException, ExecutionException {
+    	List<Messages.StorageNode> locations = new LinkedList<>();
+    	for(int i=0; i<nodes.size(); i++) {
+    		Messages.DownloadFile file = getStoredData(chunkName, Messages.StoredLocationType.newBuilder()
+        			.setLocation(nodes.get(i))
+        			.setStorageType(Messages.StorageType.PRIMARY)
+        		.build()).get();
+    		if(file.hasStoreChunk()) {
+    			locations.add(nodes.get(i));
+    			nodes.remove(i);
+    			break;
+    		}
+    	}
+    	for(int i=0; i<nodes.size(); i++) {
+    		Messages.DownloadFile file = getStoredData(chunkName, Messages.StoredLocationType.newBuilder()
+        			.setLocation(nodes.get(i))
+        			.setStorageType(Messages.StorageType.REPLICA)
+        		.build()).get();
+    		if(file.hasStoreChunk()) {
+    			locations.add(nodes.get(i));
+    			nodes.remove(i);
+    		}
+    		if(locations.size() == Client.config.getReplicaCount()) {
+    			return locations;
+    		}
+    	}
+    	while(nodes.size() != 0 && locations.size() < Client.config.getReplicaCount()) {
+    		locations.add(nodes.get(0));
+    		nodes.remove(0);
+    	}
+    	log.info("Final List of Nodes: " + locations);
+    	return locations;
     }
     
     /**
@@ -283,7 +316,6 @@ public class DistributedFileSystem {
 					MessageDispatcher.chunkToData.wait();
 				}
 				Messages.DownloadFile data = MessageDispatcher.chunkToData.remove(chunkName);
-				//System.out.println(chunkName);
 				storageClientProxy.disconnect();
 				MessageDispatcher.chunkToData.notifyAll();
 				return data;
