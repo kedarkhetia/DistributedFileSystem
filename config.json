@@ -5,7 +5,7 @@
 	"replicaM": "2000",
 	"replicaCount": "3",
 	"chunkSize": "5",
-	"controllerHost": "localhost",
+	"controllerHost": "orion01.cs.usfca.edu",
 	"controllerPort": "21000",
 	"storagePath": "/bigdata/kmkhetia/",
 	"retrivePath": "/bigdata/kmkhetia/retrived/"
