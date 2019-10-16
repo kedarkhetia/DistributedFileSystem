@@ -7,6 +7,6 @@
 	"chunkSize": "5",
 	"controllerHost": "localhost",
 	"controllerPort": "7777",
-	"storagePath": "./bigdata/",
-	"retrivePath": "./bigdata/retrived/"
+	"storagePath": "/bigdata/kmkhetia/",
+	"retrivePath": "/bigdata/kmkhetia/retrived/"
 }
