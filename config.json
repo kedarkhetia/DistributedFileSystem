@@ -6,7 +6,7 @@
 	"replicaCount": "3",
 	"chunkSize": "5",
 	"controllerHost": "localhost",
-	"controllerPort": "7777",
+	"controllerPort": "21000",
 	"storagePath": "/bigdata/kmkhetia/",
 	"retrivePath": "/bigdata/kmkhetia/retrived/"
 }
