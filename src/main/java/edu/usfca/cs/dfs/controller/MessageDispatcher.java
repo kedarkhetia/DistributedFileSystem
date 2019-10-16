@@ -5,6 +5,12 @@ import java.util.concurrent.ExecutionException;
 import edu.usfca.cs.dfs.exceptions.InvalidMessageException;
 import edu.usfca.cs.dfs.messages.Messages;
 
+/**
+ * Identifies the message type and either set's a respective variable
+ * or deligates the request to handlers.
+ * @author kedarkhetia
+ *
+ */
 public class MessageDispatcher {
 
     public static Messages.ProtoMessage dispatch(Messages.Controller message) throws InvalidMessageException, InterruptedException, ExecutionException {

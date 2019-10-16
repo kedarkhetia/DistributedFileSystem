@@ -2,6 +2,12 @@ package edu.usfca.cs.dfs.clients;
 
 import edu.usfca.cs.dfs.messages.Messages;
 
+/**
+ * Implements client proxy for communication with Storage Server.
+ * It contains message wrappers for different kind of message types.
+ * @author kedarkhetia
+ *
+ */
 public class StorageClientProxy {
     private Client client;
 

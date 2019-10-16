@@ -18,6 +18,11 @@ import edu.usfca.cs.dfs.controller.ControllerHandlers;
 import edu.usfca.cs.dfs.messages.Messages;
 import edu.usfca.cs.dfs.utils.Config;
 
+/**
+ * Driver class for driver.
+ * @author kedarkhetia
+ *
+ */
 public class Client {
 	private static String CONFIG_KEY = "-config";
     public static Config config;
@@ -33,6 +38,13 @@ public class Client {
         userInterface(dfs);
     }
     
+    /**
+     * Command line interface for user interaction.
+     * @param dfs
+     * @throws IOException
+     * @throws InterruptedException
+     * @throws ExecutionException
+     */
     public static void userInterface(DistributedFileSystem dfs) throws IOException, InterruptedException, ExecutionException {
     	System.out.println("Welcome to Distributed File System");
     	System.out.println("Note: To put/get any data from DFS your file must be present in the Classpath directory.");

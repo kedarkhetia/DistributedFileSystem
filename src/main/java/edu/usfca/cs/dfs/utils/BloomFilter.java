@@ -2,6 +2,11 @@ package edu.usfca.cs.dfs.utils;
 
 import com.sangupta.murmur.Murmur3;
 
+/**
+ * Bloom filter implementation.
+ * @author kedarkhetia
+ *
+ */
 public class BloomFilter {
     private byte[] filter;
     private int k, m;

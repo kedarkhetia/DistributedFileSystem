@@ -12,7 +12,11 @@ import com.google.gson.Gson;
 
 import edu.usfca.cs.dfs.utils.Config;
 
-
+/**
+ * Driver class for storage node.
+ * @author kedarkhetia
+ *
+ */
 public class Storage {
 
 	private static String CONFIG_KEY = "-config";
@@ -31,7 +35,7 @@ public class Storage {
     }
     
     public static void startStorageServer(int storagePort) throws IOException, InterruptedException {
-    	int port = 7772;
+    	int port = 7767;
     	StorageServer s = new StorageServer(port, config.getChunkSize());
     	StorageHandlers.startHeartbeat(InetAddress.getLocalHost().getHostAddress(), port);
         s.start();

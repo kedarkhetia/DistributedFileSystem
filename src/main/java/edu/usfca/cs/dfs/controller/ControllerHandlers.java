@@ -13,12 +13,24 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
+/**
+ * Business logic for Controller Server.
+ * @author kedarkhetia
+ *
+ */
 public class ControllerHandlers {
 
     private static Random random = new Random();
     private static ExecutorService threadPool = Executors.newFixedThreadPool(Constants.NUMBER_OF_THREADS);
     private static volatile Map<Messages.StorageNode, HeartbeatModel> heartbeatMap = new ConcurrentHashMap<>();
-
+    
+    /**
+     * Returns storage Locations for provided filename.
+     * @param request
+     * @return
+     * @throws InterruptedException
+     * @throws ExecutionException
+     */
     public static synchronized Messages.ProtoMessage getStorageLocations(Messages.StorageLocationRequest request) throws InterruptedException, ExecutionException {
         //System.out.println(nodeList);
     	List<Messages.StorageNode> locations = getStoredLocations(request.getFilename());
@@ -57,7 +69,11 @@ public class ControllerHandlers {
             }
             heartbeatMap.get(primary).setReplicaList(replicas);
     	}
-        return Messages.ProtoMessage.newBuilder().setClient(Messages.Client.newBuilder()
+        return getStorageLocationProtoMessage(locations);
+    }
+    
+    private static synchronized Messages.ProtoMessage getStorageLocationProtoMessage(List<Messages.StorageNode> locations) {
+    	return Messages.ProtoMessage.newBuilder().setClient(Messages.Client.newBuilder()
                 	.setStorageLocationResponse(Messages.StorageLocationResponse.newBuilder()
                 		.addAllLocations(locations)
                 		.build())
@@ -65,11 +81,23 @@ public class ControllerHandlers {
         		.build();
     }
     
+    /**
+     * Checks if storage space is available or not.
+     * @param size
+     * @param storageNode
+     * @return
+     * @throws InterruptedException
+     * @throws ExecutionException
+     */
     private static synchronized boolean hasStorageSpace(long size, Messages.StorageNode storageNode) throws InterruptedException, ExecutionException {
     	HeartbeatModel heartbeat = heartbeatMap.get(storageNode);
     	return size < heartbeat.getAvailableSpace();
     }
     
+    /**
+     * Updates heartbeat data.
+     * @param heartbeat
+     */
     public static synchronized void setHeartbeat(Messages.Heartbeat heartbeat) {
     	//System.out.println("Received Heartbeat From: " + heartbeat.getStorageNode().getHost() + ":" + heartbeat.getStorageNode().getPort());
     	if(!heartbeatMap.containsKey(heartbeat.getStorageNode())) {
@@ -84,6 +112,11 @@ public class ControllerHandlers {
 		heartbeatModel.setTimestamp(System.currentTimeMillis());
     }
     
+    /**
+     * Updates bloom filter once storeProof is received from Storage.
+     * @param storeProof
+     * @return
+     */
     public static synchronized Messages.ProtoMessage updateBloomFilter(Messages.StoreProof storeProof) {
     	HeartbeatModel heartbeat = heartbeatMap.get(storeProof.getNode());
     	if(storeProof.getStorageType() == Messages.StorageType.PRIMARY && heartbeat != null) {
@@ -103,6 +136,11 @@ public class ControllerHandlers {
     			.build();
     }
     
+    /**
+     * Get storage locations for provided filename.
+     * @param filename
+     * @return
+     */
     private static synchronized List<Messages.StorageNode> getStoredLocations(String filename) {
     	List<Messages.StorageNode> nodes = new LinkedList<>();
     	for(Messages.StorageNode node : heartbeatMap.keySet()) {
@@ -118,6 +156,12 @@ public class ControllerHandlers {
     	return nodes;
     }
     
+    /**
+     * Provides locations at which data is stored for given filename in
+     * StoredLocationRequest.
+     * @param storedLocationRequest
+     * @return
+     */
     public static synchronized Messages.ProtoMessage getStoredLocations(Messages.StoredLocationRequest storedLocationRequest) {
     	String filename = storedLocationRequest.getFilename();
     	List<Messages.StoredLocationType> storageLocationTypes = new LinkedList<>();
@@ -155,6 +199,11 @@ public class ControllerHandlers {
     	}
     }
     
+    /**
+     * A thread to monitor heartbeat and detect any nodes that could
+     * have possibly failed. It also executes replication workflow,
+     * after it detects node failure. 
+     */
     public static synchronized void monitorHeartBeats() {
     	threadPool.execute(new Runnable() {
     		@Override
@@ -194,6 +243,13 @@ public class ControllerHandlers {
      	});
     }
     
+    /**
+     * Executes workflow to replcae failed node with replacement node.
+     * @param node
+     * @param replacementNode
+     * @param dependents
+     * @param storageType
+     */
     private static synchronized void replace(Messages.StorageNode node, Messages.StorageNode replacementNode, 
     		List<Messages.StorageNode> dependents, Messages.StorageType storageType) {
     	for(Messages.StorageNode dependent : dependents) {
@@ -221,6 +277,10 @@ public class ControllerHandlers {
     	}
     }
     
+    /**
+     * This method informs storage node to start replications on the replacement node.
+     * @param replicate
+     */
     private static synchronized void replicate(Messages.Replicate replicate) {
     	threadPool.execute(new Runnable() {
     		@Override
@@ -234,6 +294,11 @@ public class ControllerHandlers {
     	});
     }
     
+    /**
+     * Gets list of nodes that are dependent on failed node.
+     * @param storageNode
+     * @return
+     */
     private static synchronized List<Messages.StorageNode> getDependentNodes(Messages.StorageNode storageNode) {
     	List<Messages.StorageNode> replicaList = new LinkedList<>();
     	for(Messages.StorageNode node : heartbeatMap.keySet()) {
@@ -246,6 +311,12 @@ public class ControllerHandlers {
     	return replicaList;
     }
     
+    /**
+     * Tries to get a replacement node. If the replacement node is not found. 
+     * @param storageNode
+     * @param nodes
+     * @return
+     */
     private static synchronized Messages.StorageNode getReplacementNode(Messages.StorageNode storageNode, 
     		List<Messages.StorageNode> nodes) {
     	List<Messages.StorageNode> noEligible = new LinkedList<>();
@@ -269,6 +340,11 @@ public class ControllerHandlers {
     	return storageNodeList.get(i);
     }
 
+    /**
+     * Identifies the message type for Active nodes, Total diskspace and Request served.
+     * @param contorllerEmptyMessage
+     * @return
+     */
 	public static synchronized Messages.ProtoMessage getMetaInfo(ControllerEmptyMessage contorllerEmptyMessage) {
 		if(contorllerEmptyMessage.getRequestType() == Messages.ControllerEmptyMessage.RequestType.ACTIVE_NODES) {
 			return getActiveNodes();		
@@ -282,6 +358,10 @@ public class ControllerHandlers {
 		return null;
 	}
 	
+	/**
+	 * Returns list of active nodes.
+	 * @return
+	 */
 	public static synchronized Messages.ProtoMessage getActiveNodes() {
 		return Messages.ProtoMessage.newBuilder()
 				.setClient(Messages.Client.newBuilder()
@@ -292,6 +372,11 @@ public class ControllerHandlers {
 				.build();
 	}
 	
+	/**
+	 * Returns total disk space available by summing up the disk space 
+	 * available on each node.
+	 * @return
+	 */
 	public static synchronized Messages.ProtoMessage getTotalDiskSpace() {
 		long totalDiskSpace = 0;
 		for(Messages.StorageNode storageNode : heartbeatMap.keySet()) {
@@ -306,6 +391,10 @@ public class ControllerHandlers {
 				.build();
 	}
 	
+	/**
+	 * Returns request served per node.
+	 * @return
+	 */
 	public static synchronized Messages.ProtoMessage getRequestsServed() {
 		List<Messages.RequestPerNode> requestsPerNode = new LinkedList<>();
 		for(Messages.StorageNode storageNode : heartbeatMap.keySet()) {

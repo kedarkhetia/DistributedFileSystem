@@ -37,6 +37,17 @@ public class StorageHandlers {
 	private static Messages.StorageNode selfNode;
 	private static int TIME_OUT = 3000;
 	
+	/**
+	 * Stores store chunk data to storage node. 
+	 * It also determines path (like checksum and compressed) 
+	 * to store the data.
+	 * @param chunk
+	 * @return
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 * @throws IOException
+	 * @throws NoSuchAlgorithmException
+	 */
 	public static synchronized Messages.ProtoMessage store(Messages.StoreChunk chunk) 
 			throws InterruptedException, ExecutionException, IOException, NoSuchAlgorithmException {
 		Messages.StorageType storageType = chunk.getStorageType();
@@ -62,6 +73,27 @@ public class StorageHandlers {
 			pathString += Constants.COMPRESSED_PATH + "/";
 			data = compress(chunk.getData().toByteArray());
 		}
+		storeData(pathString, chunk, data);
+		Messages.StorageFeedback feedback = getStorageFeedback(chunk, location).get();
+		processedRequest++;
+		if(!locations.isEmpty()) {
+			replicate(locations, chunk, primary);
+		}
+		if(storageType == Messages.StorageType.PRIMARY && chunk.getNodeType() == Messages.NodeType.CLIENT) {
+			return getFeedback(feedback);
+		}
+		return null;
+	}
+	
+	/**
+	 * Writes the data to file system.
+	 * @param pathString
+	 * @param chunk
+	 * @param data
+	 * @throws IOException
+	 * @throws NoSuchAlgorithmException
+	 */
+	private static synchronized void storeData(String pathString, Messages.StoreChunk chunk, byte[] data) throws IOException, NoSuchAlgorithmException {
 		Path path = Paths.get(pathString+chunk.getFileName());
 		createFilesAndDirs(path);
 		Path checksumPath = Paths.get(pathString + Constants.CHECKSUM_PATH + "/" + chunk.getFileName() + Constants.CHECKSUM_SUFFIX);
@@ -69,26 +101,35 @@ public class StorageHandlers {
 		byte[] checksum = checksum(data);
 		Files.write(checksumPath, checksum, StandardOpenOption.CREATE);
 		Files.write(path, data, StandardOpenOption.CREATE);
-		Messages.StorageFeedback feedback = getStorageFeedback(chunk, location).get();
-		processedRequest++;
-		if(!locations.isEmpty()) {
-			location = locations.get(0);
-			//System.out.println("Forwarding data to: " + locations);
-			Messages.StoreChunk newChunk = Messages.StoreChunk.newBuilder()
-				.setData(chunk.getData())
-				.setFileName(chunk.getFileName())
-				.setPrimary(primary)
-				.addAllReplicas(locations)
-				.setStorageType(Messages.StorageType.REPLICA)
-			.build();
-			sendToReplicas(newChunk, location);
-		}
-		if(storageType == Messages.StorageType.PRIMARY && chunk.getNodeType() == Messages.NodeType.CLIENT) {
-			return getFeedback(feedback);
-		}
-		return null; // ToDo: Feedback to storage if time permits.
 	}
 	
+	/**
+	 * replicate data to other storage nodes.
+	 * @param locations
+	 * @param chunk
+	 * @param primary
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 */
+	private static synchronized void replicate(List<Messages.StorageNode> locations, Messages.StoreChunk chunk, 
+			Messages.StorageNode primary) throws InterruptedException, ExecutionException {
+		Messages.StorageNode location = locations.get(0);
+		//System.out.println("Forwarding data to: " + locations);
+		Messages.StoreChunk newChunk = Messages.StoreChunk.newBuilder()
+			.setData(chunk.getData())
+			.setFileName(chunk.getFileName())
+			.setPrimary(primary)
+			.addAllReplicas(locations)
+			.setStorageType(Messages.StorageType.REPLICA)
+		.build();
+		sendToReplicas(newChunk, location);
+	}
+	
+	/**
+	 * Creates files and directories if it doen't exist.
+	 * @param path
+	 * @throws IOException
+	 */
 	private static synchronized void createFilesAndDirs(Path path) throws IOException {
 		if(!Files.exists(path)) {
 			Files.createDirectories(path.getParent());
@@ -96,6 +137,13 @@ public class StorageHandlers {
 		}
 	}
 	
+	/**
+	 * Prepares feedback message.
+	 * @param feedback
+	 * @return
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 */
 	private static synchronized Messages.ProtoMessage getFeedback(Messages.StorageFeedback feedback) throws InterruptedException, ExecutionException {
 			return Messages.ProtoMessage.newBuilder()
 					.setClient(Messages.Client.newBuilder()
@@ -104,6 +152,14 @@ public class StorageHandlers {
 					.build();
 	}
 	
+	/**
+	 * Sends storage proof to controller and receives 
+	 * acknowledgement from controller once their bloom
+	 * filter is updated. 
+	 * @param chunk
+	 * @param location
+	 * @return
+	 */
 	private static synchronized Future<Messages.StorageFeedback> getStorageFeedback(Messages.StoreChunk chunk,
 			Messages.StorageNode location) {
 		ControllerClientProxy controllerProxy = new ControllerClientProxy(Storage.config.getControllerHost(),
@@ -122,6 +178,13 @@ public class StorageHandlers {
 		});
 	}
 	
+	/**
+	 * Send the store chunk to replicas.
+	 * @param storeChunk
+	 * @param location
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 */
 	public static synchronized void sendToReplicas(Messages.StoreChunk storeChunk, Messages.StorageNode location) 
 			throws InterruptedException, ExecutionException {
 		StorageClientProxy storageClientProxy = new StorageClientProxy(location.getHost(), location.getPort(), 
@@ -133,6 +196,14 @@ public class StorageHandlers {
 		//return feedback;
 	}
 	
+	/**
+	 * Replicates the data if request is received from Contorller 
+	 * to execute replication.
+	 * @param replicate
+	 * @throws IOException
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 */
 	public static synchronized void replicate(Messages.Replicate replicate) throws IOException, InterruptedException, ExecutionException {
 		Messages.StorageNode forNode = replicate.getForNode();
 		Messages.StorageNode fromNode = replicate.getFromNode();
@@ -151,6 +222,16 @@ public class StorageHandlers {
 		replicateAllFiles(directory, replicate);
 	}
 	
+	/**
+	 * Recursively replicates all the file to storage other storage node.
+	 * Used when there a certain node failes and current node is either storing
+	 * its replica or primary data.
+	 * @param directory
+	 * @param replicate
+	 * @throws IOException
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 */
 	private static synchronized void replicateAllFiles(File directory, Messages.Replicate replicate) 
 			throws IOException, InterruptedException, ExecutionException {
 		if(directory == null || directory.listFiles() == null) return;
@@ -165,46 +246,78 @@ public class StorageHandlers {
 				if(directory.getAbsolutePath().endsWith(Constants.COMPRESSED_PATH)) {
 					data = decompress(data);
 				}
-				List<Messages.StorageNode> locations = new LinkedList<>();
 				Messages.StorageType storageType = replicate.getStorageType();
-				Messages.StoreChunk chunk;
 				if(storageType == Messages.StorageType.PRIMARY) {
-					storageType = Messages.StorageType.REPLICA;
-					locations.add(replicate.getToNode());
-					chunk = Messages.StoreChunk.newBuilder()
-							.setData(Data.parseFrom(data))
-							.setFileName(file.getName())
-							.setPrimary(replicate.getFromNode())
-							.addAllReplicas(locations)
-							.setStorageType(storageType)
-							.setNodeType(replicate.getNodeType())
-						.build();
-					System.out.println("Replicating Primary to Replica for file: " + chunk.getFileName() + " from "
-							+ replicate.getFromNode().getHost() + ":" + replicate.getFromNode().getPort() + " to "
-									+ replicate.getToNode().getHost() + ":" + replicate.getToNode().getPort());
-					sendToReplicas(chunk, replicate.getToNode());
+					replicatToReplica(replicate, file, data);
 				}
 				else {
-					storageType = Messages.StorageType.PRIMARY;
-					//locations.add(replicate.getFromNode());
-					chunk = Messages.StoreChunk.newBuilder()
-							.setData(Data.parseFrom(data))
-							.setFileName(file.getName())
-							.setPrimary(replicate.getToNode())
-							.addAllReplicas(locations)
-							.setStorageType(storageType)
-							.setNodeType(replicate.getNodeType())
-						.build();
-//					System.out.println("Replicating Replica to Primary for file: " + chunk.getFileName() + " from "
-//							+ replicate.getFromNode().getHost() + ":" + replicate.getFromNode().getPort() + " to "
-//									+ replicate.getToNode().getHost() + ":" + replicate.getToNode().getPort());
-					sendToReplicas(chunk, replicate.getToNode());
+					replicateToPrimary(replicate, file, data);
 				}
 			}
 		}
-		
 	}
 	
+	/**
+	 * Rplicates from current node's replica to destination node's primary.
+	 * @param replicate
+	 * @param file
+	 * @param data
+	 * @throws InvalidProtocolBufferException
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 */
+	private static synchronized void replicateToPrimary(Messages.Replicate replicate, File file, byte[] data) throws InvalidProtocolBufferException, InterruptedException, ExecutionException {
+		Messages.StorageType storageType = Messages.StorageType.PRIMARY;
+		List<Messages.StorageNode> locations = new LinkedList<>();
+		Messages.StoreChunk chunk = Messages.StoreChunk.newBuilder()
+				.setData(Data.parseFrom(data))
+				.setFileName(file.getName())
+				.setPrimary(replicate.getToNode())
+				.addAllReplicas(locations)
+				.setStorageType(storageType)
+				.setNodeType(replicate.getNodeType())
+			.build();
+		System.out.println("Replicating Replica to Primary for file: " + chunk.getFileName() + " from "
+				+ replicate.getFromNode().getHost() + ":" + replicate.getFromNode().getPort() + " to "
+						+ replicate.getToNode().getHost() + ":" + replicate.getToNode().getPort());
+		sendToReplicas(chunk, replicate.getToNode());
+	}
+	
+	/**
+	 * Replicates data from current node's primary to destination node's replica.
+	 * @param replicate
+	 * @param file
+	 * @param data
+	 * @throws InvalidProtocolBufferException
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 */
+	private static synchronized void replicatToReplica(Messages.Replicate replicate, File file, byte[] data) 
+			throws InvalidProtocolBufferException, InterruptedException, ExecutionException {
+		Messages.StorageType storageType = Messages.StorageType.REPLICA;
+		List<Messages.StorageNode> locations = new LinkedList<>();
+		locations.add(replicate.getToNode());
+		Messages.StoreChunk chunk = Messages.StoreChunk.newBuilder()
+				.setData(Data.parseFrom(data))
+				.setFileName(file.getName())
+				.setPrimary(replicate.getFromNode())
+				.addAllReplicas(locations)
+				.setStorageType(storageType)
+				.setNodeType(replicate.getNodeType())
+			.build();
+		System.out.println("Replicating Primary to Replica for file: " + chunk.getFileName() + " from "
+				+ replicate.getFromNode().getHost() + ":" + replicate.getFromNode().getPort() + " to "
+						+ replicate.getToNode().getHost() + ":" + replicate.getToNode().getPort());
+		sendToReplicas(chunk, replicate.getToNode());
+	}
+	
+	/**
+	 * Generates the checksum for current file.
+	 * @param data
+	 * @return
+	 * @throws IOException
+	 * @throws NoSuchAlgorithmException
+	 */
 	private static synchronized byte[] checksum(byte[] data) throws IOException, NoSuchAlgorithmException {
 		MessageDigest digest = MessageDigest.getInstance("SHA-256");
 		byte[] checksum = digest.digest(data);
@@ -212,15 +325,30 @@ public class StorageHandlers {
 		return checksum;
 	}
 	
+	/**
+	 * Compresses the data.
+	 * @param data
+	 * @return
+	 */
 	private static synchronized byte[] compress(byte[] data) {
 		return Zstd.compress(data, Constants.COMPRESS_LEVEL);
 	}
 	
+	/**
+	 * Decompresses data.
+	 * @param data
+	 * @return
+	 */
 	private static synchronized byte[] decompress(byte[] data) {
 		long decompressedSize = Zstd.decompressedSize(data);
 		return Zstd.decompress(data, (int) decompressedSize);
 	}
 	
+	/**
+	 * checks if it is feasible to compress the data or not.
+	 * @param input
+	 * @return
+	 */
 	private static synchronized boolean canCompress(byte[] input) {
         if (input.length == 0) {
             return false;
@@ -241,6 +369,12 @@ public class StorageHandlers {
         return (1d - (entropy / 8)) > 0.6d;
     }
 	
+	/**
+	 * Start sending heartbeat to contorller node.
+	 * @param selfHostName
+	 * @param selfPort
+	 * @throws InterruptedException
+	 */
 	public static synchronized void startHeartbeat(String selfHostName, int selfPort) throws InterruptedException {
 		Thread heartbeatThread = new Thread(new Runnable() {
 			@Override
@@ -265,6 +399,12 @@ public class StorageHandlers {
 		heartbeatThread.start();
 	}
 	
+	/**
+	 * Get storageFile path.
+	 * @param directory
+	 * @param filename
+	 * @return
+	 */
 	private static synchronized File getFilePath(File directory, String filename) {
 		File file = new File(directory, filename);
 		if(file.exists()) {
@@ -287,6 +427,15 @@ public class StorageHandlers {
 		return null;
 	}
 	
+	/**
+	 * Retrive data from current sotrage node.
+	 * @param uploadFile
+	 * @return
+	 * @throws IOException
+	 * @throws NoSuchAlgorithmException
+	 * @throws InterruptedException
+	 * @throws ExecutionException
+	 */
 	public static synchronized Messages.ProtoMessage retrive(Messages.UploadFile uploadFile) 
 			throws IOException, NoSuchAlgorithmException, InterruptedException, ExecutionException {
 		String filePath = Storage.config.getStoragePath() + uploadFile.getStorageNode().getHost()
@@ -314,6 +463,11 @@ public class StorageHandlers {
 		return sendFile(data, uploadFile);
 	}
 	
+	/**
+	 * Fix corrupted files by requesting it from replica nodes. 
+	 * @param chunkName
+	 * @param directory
+	 */
 	private static synchronized void fixStorage(String chunkName, File directory) {
 		threadPool.submit(new Runnable() {
 			@Override
@@ -348,6 +502,12 @@ public class StorageHandlers {
 		});
 	}
 	
+	/**
+	 * Get stored data from replica storage node.
+	 * @param chunkName
+	 * @param storedLocationType
+	 * @return
+	 */
 	private static synchronized Future<Messages.DownloadFile> getStoredData(String chunkName, Messages.StoredLocationType storedLocationType) {
     	return threadPool.submit(() -> {
     		Messages.StorageNode node = storedLocationType.getLocation();
@@ -373,6 +533,11 @@ public class StorageHandlers {
     	});
     }
 	
+	/**
+	 * getStorageNodes from controller based on chunkName.
+	 * @param chunkName
+	 * @return
+	 */
 	private static synchronized Future<List<Messages.StoredLocationType>> getStoredNodes(String chunkName) {
     	return threadPool.submit(() -> {
     		ControllerClientProxy controllerClientProxy = new ControllerClientProxy(Storage.config.getControllerHost(),
@@ -390,6 +555,12 @@ public class StorageHandlers {
     	});
     }
 	
+	/**
+	 * Read file from file system.
+	 * @param file
+	 * @return
+	 * @throws IOException
+	 */
 	private static synchronized byte[] readFile(File file) throws IOException {
 		byte[] data = new byte[(int) file.length()];
 		if(file.exists()) {
@@ -405,6 +576,15 @@ public class StorageHandlers {
 		return data;
 	}
 	
+	/**
+	 * Verifies the checksum of the data.
+	 * @param directory
+	 * @param filename
+	 * @param data
+	 * @return
+	 * @throws IOException
+	 * @throws NoSuchAlgorithmException
+	 */
 	private static synchronized boolean verifyChecksum(File directory, String filename, byte[] data) throws IOException, NoSuchAlgorithmException {
 		File file = new File(directory, Constants.CHECKSUM_PATH + "/" + filename + Constants.CHECKSUM_SUFFIX);
 		//System.out.println("Looking for checksum on path: " + file.getAbsolutePath());
@@ -415,6 +595,11 @@ public class StorageHandlers {
 		return Arrays.equals(expectedChecksum, obtainedChecksum);
 	}
 
+	/**
+	 * Creates file not found message.
+	 * @param uploadFile
+	 * @return
+	 */
 	private static synchronized Messages.ProtoMessage fileNotFound(Messages.UploadFile uploadFile) {
 		return Messages.ProtoMessage.newBuilder()
 				.setClient(Messages.Client.newBuilder()
@@ -428,6 +613,13 @@ public class StorageHandlers {
 				.build();
 	}
 	
+	/**
+	 * Send file client / storage based on the node type.
+	 * @param data
+	 * @param uploadFile
+	 * @return
+	 * @throws InvalidProtocolBufferException
+	 */
 	private static synchronized Messages.ProtoMessage sendFile(byte[] data, Messages.UploadFile uploadFile) throws InvalidProtocolBufferException {
 		if(uploadFile.getNodeType() == Messages.NodeType.CLIENT) {
 			return Messages.ProtoMessage.newBuilder()
@@ -456,7 +648,12 @@ public class StorageHandlers {
 					.build();
 		}
 	}
-
+	
+	/**
+	 * Clears storage path for given directory.
+	 * @param directory
+	 * @param isDelete
+	 */
 	public static synchronized void clearStoragePath(File directory, boolean isDelete) {
 		File[] allContents = directory.listFiles();
 	    if (allContents != null) {

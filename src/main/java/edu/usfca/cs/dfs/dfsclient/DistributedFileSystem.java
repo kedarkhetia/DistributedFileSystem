@@ -25,6 +25,11 @@ import java.util.concurrent.TimeUnit;
 
 import com.google.protobuf.ByteString;
 
+/**
+ * Business logic for DFS Client.
+ * @author kedarkhetia
+ *
+ */
 public class DistributedFileSystem {
 	
 	private int chunkSize = Constants.CHUNK_SIZE_BYTES * Client.config.getChunkSize();
@@ -33,6 +38,14 @@ public class DistributedFileSystem {
 
     public DistributedFileSystem() {}
 
+    /**
+     * Chunks and puts the data in Distributed File System.
+     * @param filename
+     * @return
+     * @throws IOException
+     * @throws InterruptedException
+     * @throws ExecutionException
+     */
     public synchronized boolean put(String filename) throws IOException, InterruptedException, ExecutionException {
     	List<Future<Messages.StorageFeedback>> storageFeedbacks = new LinkedList<>();
     	Path path = Paths.get(filename);
@@ -62,6 +75,20 @@ public class DistributedFileSystem {
         return true;
     }
     
+    /**
+     * Reads data in buffer, creates data message, get locations from 
+     * controller and sends the data to storage node.
+     * @param inChannel
+     * @param filename
+     * @param i
+     * @param size
+     * @param totalChunks
+     * @param client
+     * @param storageFeedbacks
+     * @throws IOException
+     * @throws InterruptedException
+     * @throws ExecutionException
+     */
     private synchronized void sendData(FileChannel inChannel, String filename, int i, int size, int totalChunks,
     		ControllerClientProxy client, List<Future<Messages.StorageFeedback>> storageFeedbacks) 
     				throws IOException, InterruptedException, ExecutionException {
@@ -84,6 +111,10 @@ public class DistributedFileSystem {
 		buffer.clear();
     }
     
+    /**
+     * Reads location data from message dispatcher. 
+     * @return
+     */
     private Future<List<Messages.StorageNode>> getStorageNodes() {
 		return threadPool.submit(() -> {
 			synchronized(MessageDispatcher.locations) {
@@ -97,6 +128,13 @@ public class DistributedFileSystem {
         });
 	}
     
+    /**
+     * Prepares chunk to send to storage.
+     * @param filename
+     * @param data
+     * @param locations
+     * @return
+     */
     private synchronized Future<Messages.StorageFeedback> storeInStorage(String filename, Messages.Data data, 
     		List<Messages.StorageNode> locations) {
 		return threadPool.submit(() -> {
@@ -114,6 +152,12 @@ public class DistributedFileSystem {
 		});
 	}
     
+    /**
+     * Sends chunk to storage and gets back feedback of storage.
+     * @param location
+     * @param chunk
+     * @return
+     */
     private Future<Messages.StorageFeedback> getStorageFeedback(Messages.StorageNode location, Messages.StoreChunk chunk) {
     	return threadPool.submit(() -> {
     		StorageClientProxy storageClient = new StorageClientProxy(location.getHost(), location.getPort(), Client.config.getChunkSize());
@@ -130,14 +174,27 @@ public class DistributedFileSystem {
 		});
 	}
     
+    /**
+     * Terminates threadpool.
+     * @throws InterruptedException
+     */
     public synchronized void close() throws InterruptedException {
     	threadPool.shutdown();
     	while (!threadPool.awaitTermination(24, TimeUnit.HOURS)) {
-    	    System.out.println("Waiting! Awaiting Distributed File System Termination!");
+    	    System.out.println("Awaiting Distributed File System Termination!");
     	}
     	System.out.println("DSF Shutdown Successfully!");
     }
     
+    /**
+     * Get data from Distributed File System based on filename.
+     * @param storagePath
+     * @param filename
+     * @return
+     * @throws InterruptedException
+     * @throws IOException
+     * @throws ExecutionException
+     */
     public synchronized boolean get(String storagePath, String filename) throws InterruptedException, IOException, ExecutionException {
     	int chunkCount = 1;
     	Path path = Paths.get(storagePath+filename);
@@ -160,6 +217,14 @@ public class DistributedFileSystem {
 		return true;
     }
     
+    /**
+     * Stores data received from storage locations.
+     * @param storedLocationType
+     * @param chunkName
+     * @param chunkIndex
+     * @param path
+     * @return
+     */
     private Future<Integer> getDataFromLocations(List<Messages.StoredLocationType> storedLocationType, 
     		String chunkName, int chunkIndex, String path) {
     	return threadPool.submit(() -> {
@@ -186,6 +251,12 @@ public class DistributedFileSystem {
     	});
     }
     
+    /**
+     * Request storage location for data.
+     * @param chunkName
+     * @param storedLocationType
+     * @return
+     */
     private Future<Messages.DownloadFile> getStoredData(String chunkName, Messages.StoredLocationType storedLocationType) {
     	return threadPool.submit(() -> {
     		Messages.StorageNode node = storedLocationType.getLocation();
@@ -210,6 +281,11 @@ public class DistributedFileSystem {
     	});
     }
     
+    /**
+     * Requests controller to get probable storage locations.
+     * @param chunkName
+     * @return
+     */
     private Future<List<Messages.StoredLocationType>> getStoredNodes(String chunkName) {
     	return threadPool.submit(() -> {
     		ControllerClientProxy controllerClientProxy = new ControllerClientProxy(Client.config.getControllerHost(), 
@@ -228,6 +304,12 @@ public class DistributedFileSystem {
     	});
     }
     
+    /**
+     * Gets the list of active nodes from controller.
+     * @return
+     * @throws InterruptedException
+     * @throws ExecutionException
+     */
     public synchronized List<Messages.StorageNode> getActiveNodes() throws InterruptedException, ExecutionException {
     	ControllerClientProxy clientControllerProxy = new ControllerClientProxy(Client.config.getControllerHost(), 
     			Client.config.getControllerPort(), Client.config.getChunkSize());
@@ -246,6 +328,12 @@ public class DistributedFileSystem {
     	return storageNodeList.get();
     }
     
+    /**
+     * Gets total diskspace in the system.
+     * @return
+     * @throws InterruptedException
+     * @throws ExecutionException
+     */
     public synchronized long getTotalDiskspace() throws InterruptedException, ExecutionException {
     	ControllerClientProxy clientControllerProxy = new ControllerClientProxy(Client.config.getControllerHost(), 
     			Client.config.getControllerPort(), Client.config.getChunkSize());
@@ -264,6 +352,12 @@ public class DistributedFileSystem {
     	return totalDiskspace.get();
     }
     
+    /**
+     * Gets number of request served by each node.
+     * @return
+     * @throws InterruptedException
+     * @throws ExecutionException
+     */
     public synchronized Map<Messages.StorageNode, Long> getRequestsServed() throws InterruptedException, ExecutionException {
     	ControllerClientProxy clientControllerProxy = new ControllerClientProxy(Client.config.getControllerHost(), 
     			Client.config.getControllerPort(), Client.config.getChunkSize());

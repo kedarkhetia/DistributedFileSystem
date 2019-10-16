@@ -10,6 +10,11 @@ import com.google.gson.Gson;
 
 import edu.usfca.cs.dfs.utils.Config;
 
+/**
+ * Driver class for controller.
+ * @author kedarkhetia
+ *
+ */
 public class Controller {
 	
 	private static String CONFIG_KEY = "-config";
@@ -27,6 +32,12 @@ public class Controller {
         ControllerHandlers.monitorHeartBeats();
     }
     
+    /**
+     * Helper method for reading config file.
+     * @param path
+     * @return
+     * @throws IOException
+     */
     public static String readFile(Path path) throws IOException  {
 		StringBuilder sb = new StringBuilder();
 		try (BufferedReader in = Files.newBufferedReader(path)) {

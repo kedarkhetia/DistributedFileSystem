@@ -7,6 +7,12 @@ import io.netty.channel.*;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioSocketChannel;
 
+/**
+ * Client bootstrap class for Netty.
+ * 
+ * @author kedarkhetia
+ *
+ */
 public class Client {
 
     private Channel channel;
@@ -25,14 +31,20 @@ public class Client {
         cf.syncUninterruptibly();
         this.channel = cf.channel();
     }
-
-
+   
+    /**
+     * Method to send messages to Netty Server.
+     * @param message
+     */
     public void sendMessage(Messages.ProtoMessage message) {
         ChannelFuture write = channel.write(message);
         channel.flush();
         write.syncUninterruptibly();
     }
 
+    /**
+     * Method to disconnect client from Netty Server.
+     */
     public void disconnect() {
         workerGroup.shutdownGracefully();
     }

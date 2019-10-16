@@ -3,13 +3,19 @@ package edu.usfca.cs.dfs.clients;
 import edu.usfca.cs.dfs.messages.Messages;
 import edu.usfca.cs.dfs.utils.Constants;
 
+/**
+ * Implements client proxy for communication with Controller Server.
+ * It contains message wrappers for different kind of message types.
+ * @author kedarkhetia
+ *
+ */
 public class ControllerClientProxy {
     private Client client;
 
     public ControllerClientProxy(String hostname, int port, int chunkSize) {
         this.client = new Client(hostname, port, chunkSize);
     }
-
+    
     public void getStorageLocations(String filename) { 
         client.sendMessage(Messages.ProtoMessage.newBuilder()
                 .setController(Messages.Controller.newBuilder()

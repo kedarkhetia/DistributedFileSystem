@@ -5,6 +5,11 @@ import java.util.List;
 import edu.usfca.cs.dfs.messages.Messages;
 import edu.usfca.cs.dfs.utils.BloomFilter;
 
+/**
+ * Heartbeat model to store heartbeat data.
+ * @author kedarkhetia
+ *
+ */
 public class HeartbeatModel {
 	private BloomFilter primary;
 	private BloomFilter replica;
