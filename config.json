@@ -4,9 +4,9 @@
 	"replicaK": "3",
 	"replicaM": "2000",
 	"replicaCount": "3",
-	"chunkSize": "5",
-	"controllerHost": "orion01.cs.usfca.edu",
+	"chunkSize": "50",
+	"controllerHost": "kudlick05.cs.usfca.edu",
 	"controllerPort": "21000",
-	"storagePath": "/bigdata/kmkhetia/",
+	"storagePath": "/bigdata/kmkhetia",
 	"retrivePath": "/bigdata/kmkhetia/retrived/"
 }

@@ -60,15 +60,13 @@ public class DistributedFileSystem {
         int i = 0;
     	ControllerClientProxy controllerClient = new ControllerClientProxy(Client.config.getControllerHost(), 
     			Client.config.getControllerPort(), Client.config.getChunkSize());
-		@SuppressWarnings("resource")
-		RandomAccessFile aFile = new RandomAccessFile(filename, "r");
-    	FileChannel inChannel = aFile.getChannel();
+		RandomAccessFile rFile = new RandomAccessFile(filename, "r");
     	for(i=0; i<count; i++) {
-    		sendData(inChannel, filename, i, chunkSize, count+carry, controllerClient, storageFeedbacks);
+    		sendData(rFile, filename, i, chunkSize, count+carry, controllerClient, storageFeedbacks);
     	}
         int restBuffer =  (int) (Files.size(path) % chunkSize);
         if(restBuffer != 0) {
-        	sendData(inChannel, filename, i, restBuffer, count+carry, controllerClient, storageFeedbacks);
+        	sendData(rFile, filename, i, restBuffer, count+carry, controllerClient, storageFeedbacks);
         }
         for(Future<Messages.StorageFeedback> feedback : storageFeedbacks) {
         	if(!feedback.get().getIsStored()) {
@@ -77,7 +75,7 @@ public class DistributedFileSystem {
         		return false;
         	}
         }
-        aFile.close();
+        rFile.close();
         controllerClient.disconnect();
         return true;
     }
@@ -96,14 +94,11 @@ public class DistributedFileSystem {
      * @throws InterruptedException
      * @throws ExecutionException
      */
-    private synchronized void sendData(FileChannel inChannel, String filename, int i, int size, int totalChunks,
+    private synchronized void sendData(RandomAccessFile rFile, String filename, int i, int size, int totalChunks,
     		ControllerClientProxy client, List<Future<Messages.StorageFeedback>> storageFeedbacks) 
     				throws IOException, InterruptedException, ExecutionException {
-    	ByteBuffer buffer = ByteBuffer.allocate(size);
-		inChannel.read(buffer);
-		byte[] data = new byte[size];
-		buffer.flip();
-		buffer.get(data);
+    	byte[] data = new byte[size];
+    	rFile.read(data);
 		String chunkedFileName = filename + CHUNK_SUFFIX + i;
 		Messages.Data.Builder dataBuilder = Messages.Data.newBuilder();
 		dataBuilder.setData(ByteString.copyFrom(data));
@@ -115,7 +110,6 @@ public class DistributedFileSystem {
         List<Messages.StorageNode> locations = filterStorageNodes(getStorageNodes().get(), chunkedFileName);
         log.info("Storing chunk: " + chunkedFileName + " at " + locations);
         storageFeedbacks.add(storeInStorage(chunkedFileName, dataBuilder.build(), locations));
-		buffer.clear();
     }
     
     private List<Messages.StorageNode> filterStorageNodes(List<Messages.StorageNode> nodes, String chunkName) throws InterruptedException, ExecutionException {

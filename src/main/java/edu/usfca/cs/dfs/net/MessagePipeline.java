@@ -1,7 +1,6 @@
 package edu.usfca.cs.dfs.net;
 
 import edu.usfca.cs.dfs.messages.Messages;
-import edu.usfca.cs.dfs.storage.Storage;
 import edu.usfca.cs.dfs.utils.Constants;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;

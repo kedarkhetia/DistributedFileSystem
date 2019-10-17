@@ -4,8 +4,6 @@ import java.io.File;
 import java.io.FileFilter;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -559,13 +557,9 @@ public class StorageHandlers {
 		if(file.exists()) {
 			log.info("Reading file: " + file.getAbsolutePath());
 		}
-		RandomAccessFile aFile = new RandomAccessFile(file, "r");
-    	FileChannel inChannel = aFile.getChannel();
-    	ByteBuffer buffer = ByteBuffer.allocate((int) file.length());
-		inChannel.read(buffer);
-		buffer.flip();
-		buffer.get(data);
-		aFile.close();
+		RandomAccessFile rFile = new RandomAccessFile(file, "r");
+		rFile.read(data);
+		rFile.close();
 		return data;
 	}
 	
