@@ -1,10 +1,10 @@
 {
 	"primaryK": "3",
-	"primaryM": "1000",
+	"primaryM": "100000",
 	"replicaK": "3",
-	"replicaM": "2000",
+	"replicaM": "200000",
 	"replicaCount": "3",
-	"chunkSize": "50",
+	"chunkSize": "128",
 	"controllerHost": "kudlick05.cs.usfca.edu",
 	"controllerPort": "21000",
 	"storagePath": "/bigdata/kmkhetia/",
