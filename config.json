@@ -8,5 +8,5 @@
 	"controllerHost": "kudlick05.cs.usfca.edu",
 	"controllerPort": "21000",
 	"storagePath": "/bigdata/kmkhetia/",
-	"retrivePath": "/bigdata/kmkhetia/retrived/"
+	"retrivePath": "/home4/kmkhetia/P1-hotice/retrived/"
 }
