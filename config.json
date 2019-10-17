@@ -7,6 +7,6 @@
 	"chunkSize": "50",
 	"controllerHost": "kudlick05.cs.usfca.edu",
 	"controllerPort": "21000",
-	"storagePath": "./bigdata/",
-	"retrivePath": "./bigdata/retrived/"
+	"storagePath": "/bigdata/kmkhetia/",
+	"retrivePath": "/bigdata/kmkhetia/retrived/"
 }
