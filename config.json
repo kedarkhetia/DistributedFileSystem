@@ -5,8 +5,8 @@
 	"replicaM": "2000",
 	"replicaCount": "3",
 	"chunkSize": "50",
-	"controllerHost": "localhost",
+	"controllerHost": "kudlick05.cs.usfca.edu",
 	"controllerPort": "21000",
-	"storagePath": "/bigdata/kmkhetia/",
-	"retrivePath": "/bigdata/kmkhetia/retrived/"
+	"storagePath": "./bigdata/",
+	"retrivePath": "./bigdata/retrived/"
 }
